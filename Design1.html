@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WagerCharts | Pro Casino Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <!-- Plotly.js for the interactive graph -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        gaming: ['Rajdhani', 'sans-serif'],
+                    },
+                    colors: {
+                        zinc: { 850: '#1f1f22', 900: '#18181b', 950: '#09090b' },
+                        neon: { green: '#00ff9d', purple: '#bd00ff', blue: '#00ccff' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #050505; color: #d4d4d8; }
+        .glass-panel {
+            background: rgba(15, 15, 17, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+        .bg-grid {
+            background-size: 50px 50px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+        /* Custom Plotly Styling */
+        .js-plotly-plot .plotly .main-svg { background: transparent !important; }
+        .modebar-container { display: none !important; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col font-sans overflow-x-hidden">
+
+    <!-- Background Elements -->
+    <div class="fixed inset-0 bg-grid pointer-events-none z-0"></div>
+    <div class="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[400px] bg-neon-green/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+    <!-- Top Navigation -->
+    <header class="sticky top-0 z-50 w-full border-b border-white/5 bg-black/80 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto flex h-16 items-center justify-between px-6">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-zinc-900 border border-neon-green/30 rounded flex items-center justify-center shadow-[0_0_15px_rgba(0,255,157,0.1)]">
+                        <iconify-icon icon="lucide:activity" width="20" class="text-neon-green"></iconify-icon>
+                    </div>
+                    <div class="leading-none">
+                        <span class="text-lg font-bold tracking-tighter text-white font-gaming uppercase">WagerCharts</span>
+                        <div class="text-[9px] text-zinc-500 font-mono tracking-widest uppercase">Institutional Analytics</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-zinc-900/50 rounded border border-white/5">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-green opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-neon-green"></span>
+                    </span>
+                    <span class="text-[10px] text-zinc-400 font-mono" id="last-update">SYNCING...</span>
+                </div>
+                <button class="text-[10px] px-4 py-2 bg-white text-black font-bold font-gaming uppercase tracking-widest hover:bg-neon-green transition-all rounded">Download CSV</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 w-full max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- Dashboard Summary Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="glass-panel p-6 rounded-xl border-l-4 border-l-neon-green">
+                <div class="text-xs font-bold text-zinc-500 uppercase tracking-widest font-gaming mb-2">Total Combined Online</div>
+                <div class="text-4xl font-bold text-white font-gaming tracking-tight" id="stat-total-online">0</div>
+                <div class="text-[10px] text-neon-green font-mono mt-2 flex items-center gap-1">
+                    <iconify-icon icon="lucide:trending-up"></iconify-icon>
+                    Live Aggregate Stream
+                </div>
+            </div>
+            <div class="glass-panel p-6 rounded-xl">
+                <div class="text-xs font-bold text-zinc-500 uppercase tracking-widest font-gaming mb-2">Stake Dominance</div>
+                <div class="text-4xl font-bold text-white font-gaming tracking-tight" id="stat-stake-dom">0%</div>
+                <div class="w-full bg-zinc-800 h-1 mt-3 rounded-full overflow-hidden">
+                    <div class="bg-neon-green h-full" id="dom-bar-stake" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="glass-panel p-6 rounded-xl">
+                <div class="text-xs font-bold text-zinc-500 uppercase tracking-widest font-gaming mb-2">Shuffle Peak (24h)</div>
+                <div class="text-4xl font-bold text-white font-gaming tracking-tight" id="stat-shuffle-peak">0</div>
+                <div class="text-[10px] text-neon-purple font-mono mt-2 uppercase tracking-tighter">Capacity Index Stable</div>
+            </div>
+        </div>
+
+        <!-- Main Chart Section -->
+        <div class="glass-panel rounded-xl overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-zinc-900/30">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-sm font-bold text-white font-gaming uppercase tracking-widest">Concurrency Engine</h3>
+                    <span class="text-[9px] px-2 py-0.5 bg-neon-green/10 text-neon-green border border-neon-green/20 rounded-full font-mono">AUTOSCALE ENABLED</span>
+                </div>
+                <div class="text-[10px] text-zinc-500 font-mono uppercase">Dec 15 - Dec 18 Analysis</div>
+            </div>
+            <div id="plotly-chart" class="w-full h-[450px]"></div>
+        </div>
+
+        <!-- Detailed Comparison Table -->
+        <div class="glass-panel rounded-xl overflow-hidden">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-[10px] uppercase tracking-widest text-zinc-500 bg-zinc-900/50 font-gaming">
+                        <th class="px-6 py-4">Node</th>
+                        <th class="px-6 py-4 text-right">Current Players</th>
+                        <th class="px-6 py-4 text-right">24H High</th>
+                        <th class="px-6 py-4 text-right">Volatility</th>
+                        <th class="px-6 py-4 text-right">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5 font-mono text-[11px]">
+                    <tr class="hover:bg-white/[0.02]">
+                        <td class="px-6 py-4 flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-neon-green shadow-[0_0_8px_#00ff9d]"></span>
+                            <span class="text-white font-bold tracking-tight">STAKE.COM</span>
+                        </td>
+                        <td class="px-6 py-4 text-right text-white font-bold" id="table-stake-now">0</td>
+                        <td class="px-6 py-4 text-right text-zinc-400" id="table-stake-peak">0</td>
+                        <td class="px-6 py-4 text-right text-rose-500">High (±4.2%)</td>
+                        <td class="px-6 py-4 text-right"><span class="text-neon-green">OPERATIONAL</span></td>
+                    </tr>
+                    <tr class="hover:bg-white/[0.02]">
+                        <td class="px-6 py-4 flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-neon-purple shadow-[0_0_8px_#bd00ff]"></span>
+                            <span class="text-white font-bold tracking-tight">SHUFFLE.COM</span>
+                        </td>
+                        <td class="px-6 py-4 text-right text-white font-bold" id="table-shuffle-now">0</td>
+                        <td class="px-6 py-4 text-right text-zinc-400" id="table-shuffle-peak">0</td>
+                        <td class="px-6 py-4 text-right text-neon-blue">Stable (±1.1%)</td>
+                        <td class="px-6 py-4 text-right"><span class="text-neon-green">OPERATIONAL</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="mt-auto border-t border-white/5 py-6 bg-black/40 backdrop-blur">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center text-[9px] text-zinc-600 font-mono uppercase tracking-[0.2em]">
+            <div>© 2025 WAGERCHARTS.IO &bull; KERNEL V4.2.0</div>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-neon-green transition-colors">Latency: 14ms</a>
+                <a href="#" class="hover:text-neon-green transition-colors">API Endpoint</a>
+                <a href="#" class="hover:text-neon-green transition-colors">Privacy</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Use the large dataset provided in the prompt
+        const rawData = `{"ts":"2025-12-15T02:42:00Z","casino":"stake","players":64933}
+{"ts":"2025-12-15T02:43:00Z","casino":"shuffle","players":1785}
+{"ts":"2025-12-15T02:44:00Z","casino":"stake","players":64286}
+{"ts":"2025-12-15T02:44:00Z","casino":"shuffle","players":1779}
+{"ts":"2025-12-15T02:45:00Z","casino":"stake","players":62756}
+{"ts":"2025-12-15T02:45:00Z","casino":"shuffle","players":1774}
+{"ts":"2025-12-15T02:46:00Z","casino":"stake","players":63478}
+{"ts":"2025-12-15T02:46:00Z","casino":"shuffle","players":1788}
+{"ts":"2025-12-15T02:47:00Z","casino":"shuffle","players":1794}
+{"ts":"2025-12-15T02:48:00Z","casino":"stake","players":64014}
+{"ts":"2025-12-15T02:48:00Z","casino":"shuffle","players":1807}
+{"ts":"2025-12-15T02:49:00Z","casino":"stake","players":64014}
+{"ts":"2025-12-15T02:49:00Z","casino":"shuffle","players":1832}
+{"ts":"2025-12-15T02:50:00Z","casino":"stake","players":64238}
+{"ts":"2025-12-15T02:50:00Z","casino":"shuffle","players":1834}
+{"ts":"2025-12-15T02:51:00Z","casino":"stake","players":64520}
+{"ts":"2025-12-15T02:51:00Z","casino":"shuffle","players":1841}
+{"ts":"2025-12-15T02:51:00Z","casino":"stake","players":64926}
+{"ts":"2025-12-15T02:52:00Z","casino":"shuffle","players":1857}
+{"ts":"2025-12-15T02:52:00Z","casino":"stake","players":65137}
+{"ts":"2025-12-15T02:53:00Z","casino":"shuffle","players":1868}
+{"ts":"2025-12-15T02:53:00Z","casino":"stake","players":65358}
+{"ts":"2025-12-15T02:54:00Z","casino":"shuffle","players":1894}
+{"ts":"2025-12-15T02:54:00Z","casino":"stake","players":65485}
+{"ts":"2025-12-15T02:55:00Z","casino":"shuffle","players":1886}
+{"ts":"2025-12-15T02:55:00Z","casino":"stake","players":65709}
+{"ts":"2025-12-15T02:56:00Z","casino":"shuffle","players":1904}
+{"ts":"2025-12-15T02:56:00Z","casino":"stake","players":66287}
+{"ts":"2025-12-15T02:57:00Z","casino":"shuffle","players":1891}
+{"ts":"2025-12-15T02:57:00Z","casino":"stake","players":66435}
+{"ts":"2025-12-15T02:58:00Z","casino":"shuffle","players":1891}
+{"ts":"2025-12-15T02:58:00Z","casino":"stake","players":66635}
+{"ts":"2025-12-15T02:59:00Z","casino":"shuffle","players":1870}
+{"ts":"2025-12-15T02:59:00Z","casino":"stake","players":66656}
+{"ts":"2025-12-15T03:00:00Z","casino":"shuffle","players":1880}
+{"ts":"2025-12-15T03:00:00Z","casino":"stake","players":66900}
+{"ts":"2025-12-15T03:01:00Z","casino":"shuffle","players":1862}
+{"ts":"2025-12-15T03:01:00Z","casino":"stake","players":67197}
+{"ts":"2025-12-15T03:02:00Z","casino":"shuffle","players":1850}
+{"ts":"2025-12-15T03:02:00","casino":"stake","players":67383}
+{"ts":"2025-12-15T03:03:00Z","casino":"shuffle","players":2042}
+{"ts":"2025-12-15T03:03:00Z","casino":"stake","players":67491}
+{"ts":"2025-12-15T03:04:00Z","casino":"shuffle","players":2106}
+{"ts":"2025-12-15T03:04:00Z","casino":"stake","players":67634}
+{"ts":"2025-12-15T03:05:00Z","casino":"shuffle","players":2111}
+{"ts":"2025-12-15T03:05:00Z","casino":"stake","players":67797}
+{"ts":"2025-12-15T03:06:00Z","casino":"shuffle","players":2146}
+{"ts":"2025-12-15T03:06:00Z","casino":"stake","players":67970}
+{"ts":"2025-12-15T03:07:00Z","casino":"shuffle","players":2143}
+{"ts":"2025-12-15T03:07:00Z","casino":"stake","players":68013}
+{"ts":"2025-12-15T03:08:00Z","casino":"shuffle","players":2115}
+{"ts":"2025-12-15T03:08:00Z","casino":"stake","players":68310}
+{"ts":"2025-12-15T03:09:00Z","casino":"shuffle","players":2116}
+{"ts":"2025-12-15T03:09:00Z","casino":"stake","players":68292}
+{"ts":"2025-12-15T03:10:00Z","casino":"shuffle","players":2121}
+{"ts":"2025-12-15T03:10:00Z","casino":"stake","players":68412}
+{"ts":"2025-12-15T03:11:00Z","casino":"shuffle","players":2115}
+{"ts":"2025-12-15T03:11:00Z","casino":"stake","players":68529}
+{"ts":"2025-12-15T03:12:00Z","casino":"shuffle","players":2129}
+{"ts":"2025-12-15T03:12:00Z","casino":"stake","players":68264}
+{"ts":"2025-12-15T03:13:00Z","casino":"shuffle","players":2129}
+{"ts":"2025-12-15T03:13:00Z","casino":"stake","players":68024}
+{"ts":"2025-12-15T03:14:00Z","casino":"shuffle","players":2137}
+{"ts":"2025-12-15T03:14:00Z","casino":"stake","players":67077}
+{"ts":"2025-12-15T03:15:00Z","casino":"shuffle","players":2143}
+{"ts":"2025-12-15T03:15:00Z","casino":"stake","players":65999}
+{"ts":"2025-12-15T03:16:00Z","casino":"shuffle","players":2139}
+{"ts":"2025-12-15T03:16:00Z","casino":"stake","players":62067}
+{"ts":"2025-12-15T03:17:00Z","casino":"shuffle","players":2114}
+{"ts":"2025-12-15T03:17:00Z","casino":"stake","players":61807}
+{"ts":"2025-12-15T03:18:00Z","casino":"shuffle","players":1942}
+{"ts":"2025-12-15T03:18:00Z","casino":"stake","players":62361}
+{"ts":"2025-12-15T03:19:00Z","casino":"shuffle","players":1884}
+{"ts":"2025-12-15T03:19:00Z","casino":"stake","players":62925}
+{"ts":"2025-12-15T03:20:00Z","casino":"shuffle","players":1852}
+{"ts":"2025-12-15T03:20:00Z","casino":"stake","players":63274}
+{"ts":"2025-12-15T03:21:00Z","casino":"shuffle","players":1846}
+{"ts":"2025-12-15T03:21:00Z","casino":"stake","players":63623}
+{"ts":"2025-12-15T03:22:00Z","casino":"shuffle","players":1845}
+{"ts":"2025-12-15T03:22:00Z","casino":"stake","players":63902}
+{"ts":"2025-12-15T03:23:00Z","casino":"shuffle","players":1836}
+{"ts":"2025-12-15T03:23:00Z","casino":"stake","players":64274}
+{"ts":"2025-12-15T03:24:00Z","casino":"shuffle","players":1821}
+{"ts":"2025-12-15T03:24:00Z","casino":"stake","players":64660}
+{"ts":"2025-12-15T03:25:00Z","casino":"shuffle","players":1814}
+{"ts":"2025-12-15T03:25:00Z","casino":"stake","players":64894}
+{"ts":"2025-12-15T03:26:00Z","casino":"shuffle","players":1789}
+{"ts":"2025-12-15T03:26:00Z","casino":"stake","players":65147}
+{"ts":"2025-12-15T03:27:00Z","casino":"shuffle","players":1791}
+{"ts":"2025-12-15T03:27:00Z","casino":"stake","players":65428}
+{"ts":"2025-12-15T03:28:00Z","casino":"shuffle","players":1776}
+{"ts":"2025-12-15T03:28:00Z","casino":"stake","players":65464}
+{"ts":"2025-12-15T03:29:00Z","casino":"shuffle","players":1764}
+{"ts":"2025-12-15T03:29:00Z","casino":"stake","players":65598}
+{"ts":"2025-12-15T03:30:00Z","casino":"shuffle","players":1753}
+{"ts":"2025-12-15T03:30:00Z","casino":"stake","players":65682}
+{"ts":"2025-12-15T03:31:00Z","casino":"shuffle","players":1780}
+{"ts":"2025-12-15T03:31:00Z","casino":"stake","players":65817}
+{"ts":"2025-12-15T03:32:00Z","casino":"shuffle","players":1773}
+{"ts":"2025-12-15T03:32:00Z","casino":"stake","players":65801}
+{"ts":"2025-12-15T03:33:00Z","casino":"shuffle","players":1787}
+{"ts":"2025-12-15T03:33:00Z","casino":"stake","players":66030}
+{"ts":"2025-12-15T03:34:00Z","casino":"shuffle","players":1755}
+{"ts":"2025-12-15T03:34:00Z","casino":"stake","players":66053}
+{"ts":"2025-12-15T03:35:00Z","casino":"shuffle","players":1742}
+{"ts":"2025-12-15T03:35:00Z","casino":"stake","players":66403}
+{"ts":"2025-12-15T03:36:00Z","casino":"shuffle","players":1709}
+{"ts":"2025-12-15T03:36:00Z","casino":"stake","players":66452}
+{"ts":"2025-12-15T03:37:00Z","casino":"shuffle","players":1710}
+{"ts":"2025-12-15T03:37:00Z","casino":"stake","players":66608}
+{"ts":"2025-12-15T03:38:00Z","casino":"shuffle","players":1741}
+{"ts":"2025-12-15T03:38:00Z","casino":"stake","players":66556}
+{"ts":"2025-12-15T03:39:00Z","casino":"shuffle","players":1743}
+{"ts":"2025-12-15T03:39:00Z","casino":"stake","players":66867}
+{"ts":"2025-12-15T03:40:00Z","casino":"shuffle","players":1736}
+{"ts":"2025-12-15T03:40:00Z","casino":"stake","players":67116}
+{"ts":"2025-12-15T03:41:00Z","casino":"shuffle","players":1763}
+{"ts":"2025-12-15T03:41:00Z","casino":"stake","players":67003}
+{"ts":"2025-12-15T03:42:00Z","casino":"shuffle","players":1781}
+{"ts":"2025-12-15T03:42:00Z","casino":"stake","players":67113}
+{"ts":"2025-12-15T03:43:00Z","casino":"shuffle","players":1795}
+{"ts":"2025-12-15T03:43:00Z","casino":"stake","players":67300}
+{"ts":"2025-12-15T03:44:00Z","casino":"shuffle","players":1810}
+{"ts":"2025-12-15T03:44:00Z","casino":"stake","players":67458}
+{"ts":"2025-12-15T03:45:00Z","casino":"shuffle","players":1806}
+{"ts":"2025-12-15T03:45:00Z","casino":"stake","players":67818}
+{"ts":"2025-12-15T03:46:00Z","casino":"shuffle","players":1764}
+{"ts":"2025-12-15T03:46:00Z","casino":"stake","players":68037}
+{"ts":"2025-12-15T03:47:00Z","casino":"shuffle","players":1786}
+{"ts":"2025-12-15T03:47:00Z","casino":"stake","players":68316}
+{"ts":"2025-12-15T03:48:00Z","casino":"shuffle","players":1762}
+{"ts":"2025-12-15T03:48:00Z","casino":"stake","players":68268}
+{"ts":"2025-12-15T03:49:00Z","casino":"shuffle","players":1769}
+{"ts":"2025-12-15T03:49:00Z","casino":"stake","players":68436}
+{"ts":"2025-12-15T03:50:00Z","casino":"shuffle","players":1770}
+{"ts":"2025-12-15T03:50:00Z","casino":"stake","players":68560}
+{"ts":"2025-12-15T03:51:00Z","casino":"shuffle","players":1789}
+{"ts":"2025-12-15T03:51:00Z","casino":"stake","players":68577}
+{"ts":"2025-12-15T03:52:00Z","casino":"stake","players":68831}
+{"ts":"2025-12-15T03:52:00Z","casino":"shuffle","players":1792}
+{"ts":"2025-12-15T03:53:00Z","casino":"stake","players":68730}
+{"ts":"2025-12-15T03:53:00Z","casino":"shuffle","players":1780}
+{"ts":"2025-12-15T03:54:00Z","casino":"stake","players":68169}
+{"ts":"2025-12-15T03:54:00Z","casino":"shuffle","players":1767}
+{"ts":"2025-12-15T03:55:00Z","casino":"stake","players":67304}
+{"ts":"2025-12-15T03:55:00Z","casino":"shuffle","players":1775}
+{"ts":"2025-12-15T03:56:00Z","casino":"stake","players":66672}
+{"ts":"2025-12-15T03:56:00Z","casino":"shuffle","players":1755}
+{"ts":"2025-12-15T03:57:00Z","casino":"stake","players":66531}
+{"ts":"2025-12-15T03:57:00Z","casino":"shuffle","players":1746}
+{"ts":"2025-12-15T03:58:00Z","casino":"stake","players":66456}
+{"ts":"2025-12-15T03:58:00Z","casino":"shuffle","players":1728}
+{"ts":"2025-12-15T03:59:00Z","casino":"stake","players":66290}
+{"ts":"2025-12-15T03:59:00Z","casino":"shuffle","players":1758}
+{"ts":"2025-12-15T04:00:00Z","casino":"stake","players":66231}
+{"ts":"2025-12-15T04:00:00Z","casino":"shuffle","players":1767}
+{"ts":"2025-12-15T04:01:00Z","casino":"stake","players":66068}
+{"ts":"2025-12-15T04:01:00Z","casino":"shuffle","players":1815}
+{"ts":"2025-12-15T04:02:00Z","casino":"stake","players":65945}
+{"ts":"2025-12-15T04:02:00Z","casino":"shuffle","players":1781}
+{"ts":"2025-12-15T04:03:00Z","casino":"stake","players":66090}
+{"ts":"2025-12-15T04:03:00Z","casino":"shuffle","players":1781}
+{"ts":"2025-12-15T04:04:00Z","casino":"stake","players":65963}
+{"ts":"2025-12-15T04:04:00Z","casino":"shuffle","players":1801}
+{"ts":"2025-12-15T04:05:00Z","casino":"stake","players":65926}
+{"ts":"2025-12-15T04:05:00Z","casino":"shuffle","players":1778}
+{"ts":"2025-12-15T04:06:00Z","casino":"stake","players":66039}
+{"ts":"2025-12-15T04:06:00Z","casino":"shuffle","players":1777}
+{"ts":"2025-12-15T04:07:00Z","casino":"stake","players":66017}
+{"ts":"2025-12-15T04:07:00Z","casino":"shuffle","players":1756}
+{"ts":"2025-12-15T04:08:00Z","casino":"stake","players":66158}
+{"ts":"2025-12-15T04:08:00Z","casino":"shuffle","players":1750}
+{"ts":"2025-12-15T04:09:00Z","casino":"stake","players":65885}
+{"ts":"2025-12-15T04:09:00Z","casino":"shuffle","players":1744}
+{"ts":"2025-12-15T04:10:00Z","casino":"stake","players":65872}
+{"ts":"2025-12-15T04:10:00Z","casino":"shuffle","players":1760}
+{"ts":"2025-12-15T04:11:00Z","casino":"stake","players":65240}
+{"ts":"2025-12-15T04:11:00Z","casino":"shuffle","players":1752}
+{"ts":"2025-12-15T04:12:00Z","casino":"stake","players":65125}
+{"ts":"2025-12-15T04:12:00Z","casino":"shuffle","players":1744}
+{"ts":"2025-12-15T04:13:00Z","casino":"stake","players":64868}
+{"ts":"2025-12-15T04:13:00Z","casino":"shuffle","players":1744}
+{"ts":"2025-12-15T04:14:00Z","casino":"stake","players":65116}
+{"ts":"2025-12-15T04:14:00Z","casino":"shuffle","players":1727}
+{"ts":"2025-12-15T04:15:00Z","casino":"stake","players":65166}
+{"ts":"2025-12-15T04:15:00Z","casino":"shuffle","players":1704}
+{"ts":"2025-12-15T04:16:00Z","casino":"stake","players":65149}
+{"ts":"2025-12-15T04:16:00Z","casino":"shuffle","players":1698}
+{"ts":"2025-12-15T04:17:00Z","casino":"stake","players":65436}
+{"ts":"2025-12-15T04:17:00Z","casino":"shuffle","players":1709}
+{"ts":"2025-12-15T04:18:00Z","casino":"stake","players":65349}
+{"ts":"2025-12-15T04:18:00Z","casino":"shuffle","players":1694}
+{"ts":"2025-12-15T04:19:00Z","casino":"stake","players":64720}
+{"ts":"2025-12-15T04:19:00Z","casino":"shuffle","players":1696}
+{"ts":"2025-12-15T04:20:00Z","casino":"stake","players":64570}
+{"ts":"2025-12-15T04:20:00Z","casino":"shuffle","players":1717}
+{"ts":"2025-12-15T04:21:00Z","casino":"stake","players":63878}
+{"ts":"2025-12-15T04:21:00Z","casino":"shuffle","players":1727}
+{"ts":"2025-12-15T04:22:00Z","casino":"stake","players":63782}
+{"ts":"2025-12-15T04:22:00Z","casino":"shuffle","players":1719}
+{"ts":"2025-12-15T04:23:00Z","casino":"stake","players":63315}
+{"ts":"2025-12-15T04:23:00Z","casino":"shuffle","players":1712}
+{"ts":"2025-12-15T04:24:00Z","casino":"stake","players":63175}
+{"ts":"2025-12-15T04:24:00Z","casino":"shuffle","players":1717}
+{"ts":"2025-12-15T04:25:00Z","casino":"stake","players":63326}
+{"ts":"2025-12-15T04:25:00Z","casino":"shuffle","players":1703}
+{"ts":"2025-12-15T04:26:00Z","casino":"stake","players":63164}
+{"ts":"2025-12-15T04:26:00Z","casino":"shuffle","players":1723}
+{"ts":"2025-12-15T04:27:00Z","casino":"stake","players":63183}
+{"ts":"2025-12-15T04:27:00Z","casino":"shuffle","players":1709}
+{"ts":"2025-12-15T04:28:00Z","casino":"stake","players":62966}
+{"ts":"2025-12-15T04:28:00Z","casino":"shuffle","players":1722}
+{"ts":"2025-12-15T04:29:00Z","casino":"stake","players":62891}
+{"ts":"2025-12-15T04:29:00Z","casino":"shuffle","players":1728}`;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Parse Data
+            const lines = rawData.trim().split('\n');
+            const stakeX = [], stakeY = [];
+            const shuffleX = [], shuffleY = [];
+            
+            lines.forEach(line => {
+                const entry = JSON.parse(line);
+                if(entry.casino === 'stake') {
+                    stakeX.push(entry.ts);
+                    stakeY.push(entry.players);
+                } else {
+                    shuffleX.push(entry.ts);
+                    shuffleY.push(entry.players);
+                }
+            });
+
+            // 2. Calculate Stats
+            const lastStake = stakeY[stakeY.length - 1];
+            const lastShuffle = shuffleY[shuffleY.length - 1];
+            const stakePeak = Math.max(...stakeY);
+            const shufflePeak = Math.max(...shuffleY);
+            const dominance = (lastStake / (lastStake + lastShuffle) * 100).toFixed(1);
+
+            document.getElementById('stat-total-online').innerText = (lastStake + lastShuffle).toLocaleString();
+            document.getElementById('stat-stake-dom').innerText = dominance + '%';
+            document.getElementById('dom-bar-stake').style.width = dominance + '%';
+            document.getElementById('stat-shuffle-peak').innerText = shufflePeak.toLocaleString();
+            
+            document.getElementById('table-stake-now').innerText = lastStake.toLocaleString();
+            document.getElementById('table-stake-peak').innerText = stakePeak.toLocaleString();
+            document.getElementById('table-shuffle-now').innerText = lastShuffle.toLocaleString();
+            document.getElementById('table-shuffle-peak').innerText = shufflePeak.toLocaleString();
+            document.getElementById('last-update').innerText = 'LAST SYNC: ' + new Date().toLocaleTimeString();
+
+            // 3. Create Plotly Chart
+            const traceStake = {
+                x: stakeX,
+                y: stakeY,
+                name: 'Stake',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#00ff9d', width: 3, shape: 'spline' },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(0, 255, 157, 0.05)'
+            };
+
+            const traceShuffle = {
+                x: shuffleX,
+                y: shuffleY,
+                name: 'Shuffle',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#bd00ff', width: 3, shape: 'spline' },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(189, 0, 255, 0.05)'
+            };
+
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                margin: { l: 40, r: 20, t: 20, b: 40 },
+                xaxis: {
+                    gridcolor: 'rgba(255,255,255,0.03)',
+                    tickfont: { color: '#52525b', size: 10, family: 'JetBrains Mono' },
+                    linecolor: 'rgba(255,255,255,0.1)'
+                },
+                yaxis: {
+                    gridcolor: 'rgba(255,255,255,0.03)',
+                    tickfont: { color: '#52525b', size: 10, family: 'JetBrains Mono' },
+                    linecolor: 'rgba(255,255,255,0.1)',
+                    autorange: true // Requested: rescales when one is hidden
+                },
+                legend: {
+                    font: { color: '#d4d4d8', family: 'Rajdhani', size: 12 },
+                    orientation: 'h',
+                    x: 0, y: 1.1
+                },
+                hovermode: 'x unified',
+                hoverlabel: { bgcolor: '#18181b', font: { family: 'JetBrains Mono', size: 11, color: '#fff' } }
+            };
+
+            const config = { responsive: true, displayModeBar: false };
+
+            Plotly.newPlot('plotly-chart', [traceStake, traceShuffle], layout, config);
+        });
+    </script>
+</body>
+</html>

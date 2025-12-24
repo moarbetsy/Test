@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PRIMARY SEO -->
+    <title>WagerCharts | Live Crypto Casino Analytics & Player Counts (Stake vs Shuffle)</title>
+    <meta name="description" content="Track real-time player counts, wager volume, and market share for Stake.com, Shuffle, and Rollbit. The #1 analytics dashboard for the crypto gambling industry.">
+    <meta name="keywords" content="crypto casino analytics, stake player count, shuffle stats, gambling data, wagercharts, casino rtp tracker, stake vs shuffle">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://wagercharts.com/">
+    
+    <!-- SOCIAL / OPEN GRAPH -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://wagercharts.com/">
+    <meta property="og:title" content="WagerCharts - Live Casino Analytics Terminal">
+    <meta property="og:description" content="Real-time analytics, player counts, and market insights for crypto casinos like Stake and Shuffle.">
+    <meta property="og:image" content="https://wagercharts.com/og-image.jpg">
+
+    <!-- TWITTER CARD -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="WagerCharts - Crypto Casino Data">
+    <meta name="twitter:description" content="Bloomberg Terminal for the gambling industry. View live stats now.">
+
+    <!-- SCHEMA.ORG STRUCTURED DATA -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "WagerCharts",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "Real-time analytics platform for tracking crypto casino performance, player counts, and wager volumes.",
+      "featureList": "Live Player Tracking, Wager Volume Analysis, Competitor Comparison"
+    }
+    </script>
+
+    <!-- PERFORMANCE / STYLING -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    colors: {
+                        bg: {
+                            main: '#0e0e11', 
+                            card: '#18181b', 
+                            hover: '#1f1f23',
+                        },
+                        accent: {
+                            cyan: '#06b6d4',
+                            cyanBright: '#00e7ff',
+                            stake: '#00e701',
+                            shuffle: '#8b5cf6',
+                        },
+                        text: {
+                            main: '#efeff1',
+                            muted: '#adadb8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0e0e11;
+            color: #efeff1;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0e0e11; }
+        ::-webkit-scrollbar-thumb { background: #26262c; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #323239; }
+
+        .chart-grid-line { stroke: #26262c; stroke-width: 1px; }
+        .chart-area { opacity: 0.15; }
+        
+        .rank-cell { color: #adadb8; font-weight: 600; font-family: 'Roboto Mono', monospace; }
+        
+        .badge-pro {
+            background: linear-gradient(135deg, #06b6d4 0%, #00e7ff 100%);
+            color: black;
+            font-weight: 700;
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .locked-platform {
+            opacity: 0.5;
+            filter: grayscale(0.3);
+            cursor: not-allowed;
+        }
+
+        .locked-platform:hover {
+            opacity: 0.6;
+        }
+
+        .crosshair-line {
+            stroke: rgba(255, 255, 255, 0.3);
+            stroke-width: 1;
+            stroke-dasharray: 4 4;
+            pointer-events: none;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(24, 24, 27, 0.95);
+            border: 1px solid #26262c;
+            border-radius: 6px;
+            padding: 8px 12px;
+            pointer-events: none;
+            font-size: 11px;
+            font-family: 'Roboto Mono', monospace;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        .tooltip-time {
+            color: #adadb8;
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+
+        .tooltip-value {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 2px 0;
+        }
+
+        .tooltip-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Logo Box Styles */
+        .logo-box {
+            width: 200px;
+            height: 200px;
+            border-radius: 35px;
+            border-width: 5px;
+            border-style: solid;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .logo-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Theme Colors */
+        .box-shuffle {
+            background-color: #1e1b29;
+            border-color: #4a3b89;
+            color: #7717FF;
+        }
+
+        .box-stake {
+            background-color: #142214;
+            border-color: #1e6b1e;
+            color: #00FF00;
+        }
+
+        /* SVG Optimization & Sizing */
+        .logo-svg {
+            fill: currentColor;
+            display: block;
+        }
+
+        .svg-shuffle {
+            height: 110px;
+        }
+
+        .svg-stake {
+            height: 138px;
+        }
+
+        /* Compact logo styles for chart header */
+        .logo-compact {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border-width: 2px;
+            border-style: solid;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .logo-compact.box-shuffle {
+            background-color: #1e1b29;
+            border-color: #4a3b89;
+            color: #7717FF;
+        }
+
+        .logo-compact.box-stake {
+            background-color: #142214;
+            border-color: #1e6b1e;
+            color: #00FF00;
+        }
+
+        .logo-compact .svg-shuffle {
+            height: 24px;
+        }
+
+        .logo-compact .svg-stake {
+            height: 28px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+    <!-- Application Script (Unchanged functionality) -->
+    <script>
+        // ============================================================================
+        // DATA MANAGER - Handles data parsing, filtering, and live updates
+        // ============================================================================
+        class DataManager {
+            constructor(rawData) {
+                this.rawData = rawData;
+                this.stakeData = [];
+                this.shuffleData = [];
+                this.originalStakeData = [];
+                this.originalShuffleData = [];
+                this.globalStakeMax = 0;
+                this.globalShuffleMax = 0;
+                this.initialize();
+            }
+
+            initialize() {
+                const data = this.rawData.split('|').map(row => {
+                    const [time, platform, count] = row.split(',');
+                    return { 
+                        time: new Date(time), 
+                        platform: platform.trim(), 
+                        count: parseInt(count) 
+                    };
+                });
+
+                this.originalStakeData = data.filter(d => d.platform === 'stake')
+                    .sort((a, b) => a.time - b.time);
+                this.originalShuffleData = data.filter(d => d.platform === 'shuffle')
+                    .sort((a, b) => a.time - b.time);
+
+                this.stakeData = [...this.originalStakeData];
+                this.shuffleData = [...this.originalShuffleData];
+
+                this.globalStakeMax = Math.max(...this.stakeData.map(d => d.count)) * 1.05;
+                this.globalShuffleMax = Math.max(...this.shuffleData.map(d => d.count)) * 1.05;
+            }
+
+            filterByDateRange(range) {
+                const now = new Date();
+                let cutoffDate;
+
+                if (range === 'live') {
+                    return; // Use all data
+                } else if (range === '7d') {
+                    cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                } else if (range === '30d') {
+                    cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                }
+
+                // For 7d and 30d, we'll simulate sparser data by filtering and downsampling
+                this.stakeData = this.originalStakeData.filter(d => d.time >= cutoffDate);
+                this.shuffleData = this.originalShuffleData.filter(d => d.time >= cutoffDate);
+
+                // Downsample for 7d and 30d to make it look like historical data
+                if (range === '7d') {
+                    this.stakeData = this.downsample(this.stakeData, 10);
+                    this.shuffleData = this.downsample(this.shuffleData, 10);
+                } else if (range === '30d') {
+                    this.stakeData = this.downsample(this.stakeData, 30);
+                    this.shuffleData = this.downsample(this.shuffleData, 30);
+                }
+
+                this.globalStakeMax = Math.max(...this.stakeData.map(d => d.count), 60000) * 1.05;
+                this.globalShuffleMax = Math.max(...this.shuffleData.map(d => d.count), 1500) * 1.05;
+            }
+
+            downsample(data, factor) {
+                const result = [];
+                for (let i = 0; i < data.length; i += factor) {
+                    result.push(data[i]);
+                }
+                return result;
+            }
+
+            resetToLive() {
+                this.stakeData = [...this.originalStakeData];
+                this.shuffleData = [...this.originalShuffleData];
+                this.globalStakeMax = Math.max(...this.stakeData.map(d => d.count)) * 1.05;
+                this.globalShuffleMax = Math.max(...this.shuffleData.map(d => d.count)) * 1.05;
+            }
+
+            simulateLiveUpdate() {
+                const lastTime = this.stakeData[this.stakeData.length - 1].time;
+                const newTime = new Date(lastTime.getTime() + 60000);
+                const lastStake = this.stakeData[this.stakeData.length - 1].count;
+                const lastShuffle = this.shuffleData[this.shuffleData.length - 1].count;
+                
+                const stakeTrend = Math.random() > 0.5 ? 1 : -1;
+                const shuffleTrend = Math.random() > 0.5 ? 1 : -1;
+                const stakeChange = Math.floor(Math.random() * 300) * stakeTrend; 
+                const shuffleChange = Math.floor(Math.random() * 20) * shuffleTrend;
+
+                const newStakeCount = lastStake + stakeChange;
+                const newShuffleCount = lastShuffle + shuffleChange;
+
+                this.stakeData.push({ time: newTime, platform: 'stake', count: newStakeCount });
+                this.shuffleData.push({ time: newTime, platform: 'shuffle', count: newShuffleCount });
+
+                this.stakeData.shift();
+                this.shuffleData.shift();
+
+                if (newStakeCount > this.globalStakeMax) {
+                    this.globalStakeMax = newStakeCount * 1.02;
+                }
+                if (newShuffleCount > this.globalShuffleMax) {
+                    this.globalShuffleMax = newShuffleCount * 1.02;
+                }
+
+                return { newStakeCount, newShuffleCount };
+            }
+
+            getDataAtTime(targetTime) {
+                // Find closest data points for both platforms at given time
+                const stakePoint = this.findClosestPoint(this.stakeData, targetTime);
+                const shufflePoint = this.findClosestPoint(this.shuffleData, targetTime);
+                return { stake: stakePoint, shuffle: shufflePoint };
+            }
+
+            findClosestPoint(dataset, targetTime) {
+                let closest = dataset[0];
+                let minDiff = Math.abs(targetTime - closest.time);
+
+                for (const point of dataset) {
+                    const diff = Math.abs(targetTime - point.time);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closest = point;
+                    }
+                }
+                return closest;
+            }
+        }
+
+        // ============================================================================
+        // CHART MANAGER - Handles chart rendering, crosshair, and tooltip
+        // ============================================================================
+        class ChartManager {
+            constructor(dataManager) {
+                this.dataManager = dataManager;
+                this.chartWidth = 1200;
+                this.chartHeight = 400;
+                this.svg = null;
+                this.chartContainer = null;
+                this.crosshairV = null;
+                this.crosshairH = null;
+                this.tooltip = null;
+                this.isMouseOverChart = false;
+                this.initialize();
+            }
+
+            initialize() {
+                this.chartContainer = document.getElementById('chart-container');
+                this.svg = document.getElementById('chart-svg');
+                if (!this.chartContainer || !this.svg) {
+                    console.error('Chart elements not found');
+                    return;
+                }
+                this.createCrosshair();
+                this.createTooltip();
+                this.attachEventListeners();
+            }
+
+            createCrosshair() {
+                // Vertical line
+                this.crosshairV = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                this.crosshairV.setAttribute('class', 'crosshair-line');
+                this.crosshairV.setAttribute('x1', '0');
+                this.crosshairV.setAttribute('y1', '0');
+                this.crosshairV.setAttribute('x2', '0');
+                this.crosshairV.setAttribute('y2', this.chartHeight);
+                this.crosshairV.style.display = 'none';
+                this.svg.appendChild(this.crosshairV);
+
+                // Horizontal line
+                this.crosshairH = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                this.crosshairH.setAttribute('class', 'crosshair-line');
+                this.crosshairH.setAttribute('x1', '0');
+                this.crosshairH.setAttribute('y1', '0');
+                this.crosshairH.setAttribute('x2', this.chartWidth);
+                this.crosshairH.setAttribute('y2', '0');
+                this.crosshairH.style.display = 'none';
+                this.svg.appendChild(this.crosshairH);
+            }
+
+            createTooltip() {
+                this.tooltip = document.createElement('div');
+                this.tooltip.className = 'tooltip';
+                this.tooltip.style.display = 'none';
+                this.chartContainer.appendChild(this.tooltip);
+            }
+
+            attachEventListeners() {
+                const chartArea = this.chartContainer;
+                
+                chartArea.addEventListener('mouseenter', () => {
+                    this.isMouseOverChart = true;
+                    this.showCrosshair();
+                });
+
+                chartArea.addEventListener('mouseleave', () => {
+                    this.isMouseOverChart = false;
+                    this.hideCrosshair();
+                    this.hideTooltip();
+                });
+
+                chartArea.addEventListener('mousemove', (e) => {
+                    if (!this.isMouseOverChart) return;
+                    this.updateCrosshair(e);
+                    this.updateTooltip(e);
+                });
+            }
+
+            showCrosshair() {
+                this.crosshairV.style.display = 'block';
+                // Only show vertical line (X-axis)
+                this.crosshairH.style.display = 'none';
+            }
+
+            hideCrosshair() {
+                this.crosshairV.style.display = 'none';
+                this.crosshairH.style.display = 'none';
+            }
+
+            updateCrosshair(e) {
+                const rect = this.chartContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+
+                // Convert to SVG coordinates
+                const svgX = ((x / rect.width) * this.chartWidth);
+
+                // Clamp to chart bounds
+                const clampedX = Math.max(0, Math.min(this.chartWidth, svgX));
+
+                // Only update vertical line (X-axis)
+                this.crosshairV.setAttribute('x1', clampedX);
+                this.crosshairV.setAttribute('x2', clampedX);
+            }
+
+            updateTooltip(e) {
+                const rect = this.chartContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const percentX = x / rect.width;
+                
+                // Calculate time at mouse position
+                const minTime = this.dataManager.stakeData[0].time;
+                const maxTime = this.dataManager.stakeData[this.dataManager.stakeData.length - 1].time;
+                const timeRange = maxTime - minTime;
+                const targetTime = new Date(minTime.getTime() + (timeRange * percentX));
+
+                // Get data at this time
+                const data = this.dataManager.getDataAtTime(targetTime);
+
+                // Format time
+                const hours = targetTime.getUTCHours().toString().padStart(2, '0');
+                const minutes = targetTime.getUTCMinutes().toString().padStart(2, '0');
+                const timeStr = `${hours}:${minutes}`;
+
+                // Get currency from UI manager
+                const currency = window.app?.uiManager?.currentCurrency || 'USD';
+                const btcPrice = window.app?.uiManager?.btcPrice || 100000;
+
+                // Format values based on currency
+                let stakeValue = data.stake.count;
+                let shuffleValue = data.shuffle.count;
+                if (currency === 'BTC') {
+                    stakeValue = (stakeValue / btcPrice).toFixed(4);
+                    shuffleValue = (shuffleValue / btcPrice).toFixed(4);
+                } else {
+                    stakeValue = stakeValue.toLocaleString();
+                    shuffleValue = shuffleValue.toLocaleString();
+                }
+
+                // Update tooltip content
+                this.tooltip.innerHTML = `
+                    <div class="tooltip-time">${timeStr} UTC</div>
+                    <div class="tooltip-value">
+                        <span class="tooltip-dot" style="background: #00e701;"></span>
+                        <span style="color: #00e701;">Stake:</span>
+                        <span style="color: #efeff1; font-weight: 600;">${stakeValue}</span>
+                    </div>
+                    <div class="tooltip-value">
+                        <span class="tooltip-dot" style="background: #8b5cf6;"></span>
+                        <span style="color: #8b5cf6;">Shuffle:</span>
+                        <span style="color: #efeff1; font-weight: 600;">${shuffleValue}</span>
+                    </div>
+                `;
+
+                // Position tooltip next to cursor (using viewport coordinates for zoom independence)
+                // First, show tooltip to get its dimensions
+                this.tooltip.style.display = 'block';
+                const tooltipRect = this.tooltip.getBoundingClientRect();
+                
+                // Position relative to cursor
+                const offset = 15;
+                let tooltipX = e.clientX + offset;
+                let tooltipY = e.clientY - tooltipRect.height / 2;
+
+                // Keep tooltip within viewport bounds
+                if (tooltipX + tooltipRect.width > window.innerWidth) {
+                    tooltipX = e.clientX - tooltipRect.width - offset;
+                }
+                if (tooltipY < 0) {
+                    tooltipY = e.clientY + offset;
+                }
+                if (tooltipY + tooltipRect.height > window.innerHeight) {
+                    tooltipY = window.innerHeight - tooltipRect.height - 10;
+                }
+
+                // Use fixed positioning relative to viewport
+                this.tooltip.style.position = 'fixed';
+                this.tooltip.style.left = `${tooltipX}px`;
+                this.tooltip.style.top = `${tooltipY}px`;
+            }
+
+            hideTooltip() {
+                this.tooltip.style.display = 'none';
+            }
+
+            render() {
+                const { stakeData, shuffleData, globalStakeMax, globalShuffleMax } = this.dataManager;
+                const minTime = stakeData[0].time;
+                const maxTime = stakeData[stakeData.length - 1].time;
+                
+                const stakeMax = globalStakeMax;
+                const stakeMin = 60000;
+                const shuffleMax = globalShuffleMax;
+                const shuffleMin = 1500;
+
+                // Update time labels
+                const timeLabels = document.querySelectorAll('.time-label');
+                const totalDuration = maxTime - minTime;
+                timeLabels.forEach((label, index) => {
+                    const percent = index / (timeLabels.length - 1);
+                    const labelTime = new Date(minTime.getTime() + (totalDuration * percent));
+                    const hours = labelTime.getUTCHours().toString().padStart(2, '0');
+                    const minutes = labelTime.getUTCMinutes().toString().padStart(2, '0');
+                    label.innerText = `${hours}:${minutes}`;
+                });
+
+                // Update paths
+                document.getElementById('stake-line').setAttribute('d', 
+                    this.getPathData(stakeData, stakeMin, stakeMax, minTime, maxTime));
+                document.getElementById('stake-area').setAttribute('d', 
+                    this.getPathData(stakeData, stakeMin, stakeMax, minTime, maxTime, true));
+                document.getElementById('shuffle-line').setAttribute('d', 
+                    this.getPathData(shuffleData, shuffleMin, shuffleMax, minTime, maxTime));
+                document.getElementById('shuffle-area').setAttribute('d', 
+                    this.getPathData(shuffleData, shuffleMin, shuffleMax, minTime, maxTime, true));
+            }
+
+            getPathData(dataset, minVal, maxVal, minTime, maxTime, isArea = false) {
+                const points = dataset.map(d => {
+                    const x = ((d.time - minTime) / (maxTime - minTime)) * this.chartWidth;
+                    const range = maxVal - minVal;
+                    const normalized = (d.count - minVal) / range; 
+                    const clampedNorm = Math.max(0, Math.min(1, normalized));
+                    const y = this.chartHeight - (clampedNorm * (this.chartHeight * 0.9));
+                    return [x, y];
+                });
+
+                let d = `M ${points[0][0]} ${points[0][1]}`;
+                for (let i = 1; i < points.length; i++) {
+                    d += ` L ${points[i][0]} ${points[i][1]}`;
+                }
+
+                if (isArea) {
+                    d += ` L ${points[points.length-1][0]} ${this.chartHeight} L ${points[0][0]} ${this.chartHeight} Z`;
+                }
+                return d;
+            }
+        }
+
+        // ============================================================================
+        // UI MANAGER - Handles UI interactions (modals, buttons, etc.)
+        // ============================================================================
+        class UIManager {
+            constructor(dataManager) {
+                this.dataManager = dataManager;
+                this.isProUser = false;
+                this.currentGraphType = 'live';
+                this.currentCurrency = 'USD';
+                this.currentDateRange = 'live';
+                this.btcPrice = 100000; // Mock BTC price
+                this.initialize();
+            }
+
+            initialize() {
+                this.setupModalHandlers();
+                this.setupDateRangeHandlers();
+                this.setupFilterHandlers();
+            }
+
+            setupFilterHandlers() {
+                const applyBtn = document.getElementById('apply-filters-btn');
+                if (applyBtn) {
+                    applyBtn.addEventListener('click', () => {
+                        this.applyFilters();
+                    });
+                }
+            }
+
+            setupModalHandlers() {
+                // Close modal on backdrop click
+                document.addEventListener('click', (e) => {
+                    if (e.target.id === 'pro-modal' || e.target.id === 'auth-modal') {
+                        this.hideModal(e.target.id);
+                    }
+                });
+            }
+
+            setupDateRangeHandlers() {
+                document.querySelectorAll('[data-range]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const range = e.target.getAttribute('data-range');
+                        this.handleDateRangeChange(range, e.target);
+                    });
+                });
+            }
+
+            showProModal() {
+                document.getElementById('pro-modal').classList.remove('hidden');
+            }
+
+            hideProModal() {
+                document.getElementById('pro-modal').classList.add('hidden');
+            }
+
+            hideModal(modalId) {
+                document.getElementById(modalId).classList.add('hidden');
+            }
+
+            formatValue(value) {
+                if (this.currentCurrency === 'BTC') {
+                    return (value / this.btcPrice).toFixed(4);
+                }
+                return value.toLocaleString();
+            }
+
+            updateStats() {
+                const { stakeData, shuffleData } = this.dataManager;
+                const total = stakeData[stakeData.length - 1].count + shuffleData[shuffleData.length - 1].count;
+                const peak = Math.max(...stakeData.map(d => d.count)) + Math.max(...shuffleData.map(d => d.count));
+                
+                const peakEl = document.getElementById('stat-peak');
+                const avgEl = document.getElementById('stat-avg');
+                if (peakEl) peakEl.innerText = this.formatValue(peak);
+                if (avgEl) avgEl.innerText = this.formatValue(Math.round(total / 2));
+            }
+
+            updateLiveValues(stakeCount, shuffleCount) {
+                const stakeEl = document.getElementById('stake-val');
+                const shuffleEl = document.getElementById('shuffle-val');
+                if (stakeEl) stakeEl.innerText = this.formatValue(stakeCount);
+                if (shuffleEl) shuffleEl.innerText = this.formatValue(shuffleCount);
+            }
+
+            updateRankingTable() {
+                // Update ranking table values using data attributes
+                const rankingCells = document.querySelectorAll('[data-original-value]');
+                rankingCells.forEach((cell) => {
+                    const originalValue = parseFloat(cell.getAttribute('data-original-value'));
+                    if (!isNaN(originalValue)) {
+                        cell.textContent = this.formatValue(originalValue);
+                    }
+                });
+            }
+
+            applyFilters() {
+                const currencySelect = document.getElementById('currency-filter');
+                const dateRangeSelect = document.getElementById('date-range-filter');
+                
+                if (currencySelect) {
+                    this.currentCurrency = currencySelect.value;
+                }
+                if (dateRangeSelect) {
+                    this.currentDateRange = dateRangeSelect.value;
+                    
+                    // Update data based on date range
+                    if (this.currentDateRange === 'live') {
+                        this.dataManager.resetToLive();
+                    } else {
+                        this.dataManager.filterByDateRange(this.currentDateRange);
+                    }
+                }
+
+                // Update top bar date range buttons
+                document.querySelectorAll('[data-range]').forEach(btn => {
+                    btn.classList.remove('bg-white', 'text-black');
+                    btn.classList.add('text-text-muted');
+                    if (btn.getAttribute('data-range') === this.currentDateRange) {
+                        btn.classList.add('bg-white', 'text-black');
+                        btn.classList.remove('text-text-muted');
+                    }
+                });
+
+                // Re-render everything
+                if (window.app && window.app.chartManager) {
+                    window.app.chartManager.render();
+                }
+                this.updateStats();
+                this.updateLiveValues(
+                    this.dataManager.stakeData[this.dataManager.stakeData.length - 1].count,
+                    this.dataManager.shuffleData[this.dataManager.shuffleData.length - 1].count
+                );
+                this.updateRankingTable();
+            }
+
+            downloadCSV() {
+                if (!this.isProUser) {
+                    this.showProModal();
+                    return;
+                }
+                
+                const { stakeData, shuffleData } = this.dataManager;
+                let csv = 'Timestamp,Platform,Player Count\n';
+                [...stakeData, ...shuffleData]
+                    .sort((a, b) => a.time - b.time)
+                    .forEach(d => {
+                        csv += `${d.time.toISOString()},${d.platform},${d.count}\n`;
+                    });
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `wagercharts-export-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+            }
+
+            handleDateRangeChange(range, target) {
+                // Allow 7d and 30d without pro check for now
+                document.querySelectorAll('[data-range]').forEach(btn => {
+                    btn.classList.remove('bg-white', 'text-black');
+                    btn.classList.add('text-text-muted');
+                });
+                target.classList.add('bg-white', 'text-black');
+                target.classList.remove('text-text-muted');
+                
+                // Update date range filter dropdown
+                const dateRangeSelect = document.getElementById('date-range-filter');
+                if (dateRangeSelect) {
+                    dateRangeSelect.value = range;
+                }
+                this.currentDateRange = range;
+                
+                // Update chart data based on range
+                this.updateChartForRange(range);
+            }
+
+            handleGraphTypeChange(type, target) {
+                document.querySelectorAll('[data-graph-type]').forEach(btn => {
+                    btn.classList.remove('bg-[#26262c]', 'text-white');
+                    btn.classList.add('text-text-muted');
+                });
+                target.classList.add('bg-[#26262c]', 'text-white');
+                target.classList.remove('text-text-muted');
+                
+                // Update chart visualization type
+                this.currentGraphType = type;
+            }
+
+            updateChartForRange(range) {
+                // Filter data based on range
+                if (range === 'live') {
+                    this.dataManager.resetToLive();
+                } else {
+                    this.dataManager.filterByDateRange(range);
+                }
+                
+                // Trigger re-render
+                if (window.app && window.app.chartManager) {
+                    window.app.chartManager.render();
+                }
+                this.updateStats();
+                this.updateLiveValues(
+                    this.dataManager.stakeData[this.dataManager.stakeData.length - 1].count,
+                    this.dataManager.shuffleData[this.dataManager.shuffleData.length - 1].count
+                );
+                this.updateRankingTable();
+            }
+        }
+
+        // ============================================================================
+        // APPLICATION - Main application controller
+        // ============================================================================
+        class App {
+            constructor(rawData) {
+                this.dataManager = new DataManager(rawData);
+                this.chartManager = new ChartManager(this.dataManager);
+                this.uiManager = new UIManager(this.dataManager);
+                this.updateInterval = null;
+                // Make app globally accessible
+                window.app = this;
+            }
+
+            init() {
+                this.chartManager.render();
+                this.uiManager.updateStats();
+                this.uiManager.updateRankingTable();
+                this.startLiveUpdates();
+            }
+
+            startLiveUpdates() {
+                this.updateInterval = setInterval(() => {
+                    const { newStakeCount, newShuffleCount } = this.dataManager.simulateLiveUpdate();
+                    this.uiManager.updateLiveValues(newStakeCount, newShuffleCount);
+                    this.chartManager.render();
+                    this.uiManager.updateStats();
+                }, 2000);
+            }
+
+            destroy() {
+                if (this.updateInterval) {
+                    clearInterval(this.updateInterval);
+                }
+            }
+        }
+
+        // ============================================================================
+        // GLOBAL INITIALIZATION
+        // ============================================================================
+        const rawData = `2025-12-15T03:00:00Z,shuffle,1880|2025-12-15T03:00:00Z,stake,66900|2025-12-15T03:01:00Z,shuffle,1862|2025-12-15T03:01:00Z,stake,67197|2025-12-15T03:02:00Z,shuffle,1850|2025-12-15T03:02:00Z,stake,67383|2025-12-15T03:03:00Z,shuffle,2042|2025-12-15T03:03:00Z,stake,67491|2025-12-15T03:04:00Z,shuffle,2106|2025-12-15T03:04:00Z,stake,67634|2025-12-15T03:05:00Z,shuffle,2111|2025-12-15T03:05:00Z,stake,67797|2025-12-15T03:06:00Z,shuffle,2146|2025-12-15T03:06:00Z,stake,67970|2025-12-15T03:07:00Z,shuffle,2143|2025-12-15T03:07:00Z,stake,68013|2025-12-15T03:08:00Z,shuffle,2115|2025-12-15T03:08:00Z,stake,68310|2025-12-15T03:09:00Z,shuffle,2116|2025-12-15T03:09:00Z,stake,68292|2025-12-15T03:10:00Z,shuffle,2121|2025-12-15T03:10:00Z,stake,68412|2025-12-15T03:11:00Z,shuffle,2115|2025-12-15T03:11:00Z,stake,68529|2025-12-15T03:12:00Z,shuffle,2129|2025-12-15T03:12:00Z,stake,68264|2025-12-15T03:13:00Z,shuffle,2129|2025-12-15T03:13:00Z,stake,68024|2025-12-15T03:14:00Z,shuffle,2137|2025-12-15T03:14:00Z,stake,67077|2025-12-15T03:15:00Z,shuffle,2143|2025-12-15T03:15:00Z,stake,65999|2025-12-15T03:16:00Z,shuffle,2139|2025-12-15T03:16:00Z,stake,62067|2025-12-15T03:17:00Z,shuffle,2114|2025-12-15T03:17:00Z,stake,61807|2025-12-15T03:18:00Z,shuffle,1942|2025-12-15T03:18:00Z,stake,62361|2025-12-15T03:19:00Z,shuffle,1884|2025-12-15T03:19:00Z,stake,62925|2025-12-15T03:20:00Z,shuffle,1852|2025-12-15T03:20:00Z,stake,63274|2025-12-15T03:21:00Z,shuffle,1846|2025-12-15T03:21:00Z,stake,63623|2025-12-15T03:22:00Z,shuffle,1845|2025-12-15T03:22:00Z,stake,63902|2025-12-15T03:23:00Z,shuffle,1836|2025-12-15T03:23:00Z,stake,64274|2025-12-15T03:24:00Z,shuffle,1821|2025-12-15T03:24:00Z,stake,64660|2025-12-15T03:25:00Z,shuffle,1814|2025-12-15T03:25:00Z,stake,64894|2025-12-15T03:26:00Z,shuffle,1789|2025-12-15T03:26:00Z,stake,65147|2025-12-15T03:27:00Z,shuffle,1791|2025-12-15T03:27:00Z,stake,65428|2025-12-15T03:28:00Z,shuffle,1776|2025-12-15T03:28:00Z,stake,65464|2025-12-15T03:29:00Z,shuffle,1764|2025-12-15T03:29:00Z,stake,65598|2025-12-15T03:30:00Z,shuffle,1753|2025-12-15T03:30:00Z,stake,65682|2025-12-15T03:31:00Z,shuffle,1780|2025-12-15T03:31:00Z,stake,65817|2025-12-15T03:32:00Z,shuffle,1773|2025-12-15T03:32:00Z,stake,65801|2025-12-15T03:33:00Z,shuffle,1787|2025-12-15T03:33:00Z,stake,66030|2025-12-15T03:34:00Z,shuffle,1755|2025-12-15T03:34:00Z,stake,66053|2025-12-15T03:35:00Z,shuffle,1742|2025-12-15T03:35:00Z,stake,66403|2025-12-15T03:36:00Z,shuffle,1709|2025-12-15T03:36:00Z,stake,66452|2025-12-15T03:37:00Z,shuffle,1710|2025-12-15T03:37:00Z,stake,66608|2025-12-15T03:38:00Z,shuffle,1741|2025-12-15T03:38:00Z,stake,66556|2025-12-15T03:39:00Z,shuffle,1743|2025-12-15T03:39:00Z,stake,66867|2025-12-15T03:40:00Z,shuffle,1736|2025-12-15T03:40:00Z,stake,67116|2025-12-15T03:41:00Z,shuffle,1763|2025-12-15T03:41:00Z,stake,67003|2025-12-15T03:42:00Z,shuffle,1781|2025-12-15T03:42:00Z,stake,67113|2025-12-15T03:43:00Z,shuffle,1795|2025-12-15T03:43:00Z,stake,67300|2025-12-15T03:44:00Z,shuffle,1810|2025-12-15T03:44:00Z,stake,67458|2025-12-15T03:45:00Z,shuffle,1806|2025-12-15T03:45:00Z,stake,67818|2025-12-15T03:46:00Z,shuffle,1764|2025-12-15T03:46:00Z,stake,68037|2025-12-15T03:47:00Z,shuffle,1786|2025-12-15T03:47:00Z,stake,68316|2025-12-15T03:48:00Z,shuffle,1762|2025-12-15T03:48:00Z,stake,68268|2025-12-15T03:49:00Z,shuffle,1769|2025-12-15T03:49:00Z,stake,68436|2025-12-15T03:50:00Z,shuffle,1770|2025-12-15T03:50:00Z,stake,68560|2025-12-15T03:51:00Z,shuffle,1789|2025-12-15T03:51:00Z,stake,68577|2025-12-15T03:52:00Z,stake,68831|2025-12-15T03:52:00Z,shuffle,1792|2025-12-15T03:53:00Z,stake,68730|2025-12-15T03:53:00Z,shuffle,1780|2025-12-15T03:54:00Z,stake,68169|2025-12-15T03:54:00Z,shuffle,1767|2025-12-15T03:55:00Z,stake,67304|2025-12-15T03:55:00Z,shuffle,1775|2025-12-15T03:56:00Z,stake,66672|2025-12-15T03:56:00Z,shuffle,1755|2025-12-15T03:57:00Z,stake,66531|2025-12-15T03:57:00Z,shuffle,1746|2025-12-15T03:58:00Z,stake,66456|2025-12-15T03:58:00Z,shuffle,1728|2025-12-15T03:59:00Z,stake,66290|2025-12-15T03:59:00Z,shuffle,1758|2025-12-15T04:00:00Z,stake,66231|2025-12-15T04:00:00Z,shuffle,1767|2025-12-15T04:01:00Z,stake,66068|2025-12-15T04:01:00Z,shuffle,1815|2025-12-15T04:02:00Z,stake,65945|2025-12-15T04:02:00Z,shuffle,1781|2025-12-15T04:03:00Z,stake,66090|2025-12-15T04:03:00Z,shuffle,1781|2025-12-15T04:04:00Z,stake,65963|2025-12-15T04:04:00Z,shuffle,1801|2025-12-15T04:05:00Z,stake,65926|2025-12-15T04:05:00Z,shuffle,1778|2025-12-15T04:06:00Z,stake,66039|2025-12-15T04:06:00Z,shuffle,1777|2025-12-15T04:07:00Z,stake,66017|2025-12-15T04:07:00Z,shuffle,1756|2025-12-15T04:08:00Z,stake,66158|2025-12-15T04:08:00Z,shuffle,1750|2025-12-15T04:09:00Z,stake,65885|2025-12-15T04:09:00Z,shuffle,1744|2025-12-15T04:10:00Z,stake,65872|2025-12-15T04:10:00Z,shuffle,1760|2025-12-15T04:11:00Z,stake,65240|2025-12-15T04:11:00Z,shuffle,1752|2025-12-15T04:12:00Z,stake,65125|2025-12-15T04:12:00Z,shuffle,1744|2025-12-15T04:13:00Z,stake,64868|2025-12-15T04:13:00Z,shuffle,1744|2025-12-15T04:14:00Z,stake,65116|2025-12-15T04:14:00Z,shuffle,1727|2025-12-15T04:15:00Z,stake,65166|2025-12-15T04:15:00Z,shuffle,1704|2025-12-15T04:16:00Z,stake,65149|2025-12-15T04:16:00Z,shuffle,1698|2025-12-15T04:17:00Z,stake,65436|2025-12-15T04:17:00Z,shuffle,1709|2025-12-15T04:18:00Z,stake,65349|2025-12-15T04:18:00Z,shuffle,1694|2025-12-15T04:19:00Z,stake,64720|2025-12-15T04:19:00Z,shuffle,1696|2025-12-15T04:20:00Z,stake,64570|2025-12-15T04:20:00Z,shuffle,1717|2025-12-15T04:21:00Z,stake,63878|2025-12-15T04:21:00Z,shuffle,1727|2025-12-15T04:22:00Z,stake,63782|2025-12-15T04:22:00Z,shuffle,1719|2025-12-15T04:23:00Z,stake,63315|2025-12-15T04:23:00Z,shuffle,1712|2025-12-15T04:24:00Z,stake,63175|2025-12-15T04:24:00Z,shuffle,1717|2025-12-15T04:25:00Z,stake,63326|2025-12-15T04:25:00Z,shuffle,1703|2025-12-15T04:26:00Z,stake,63164|2025-12-15T04:26:00Z,shuffle,1723|2025-12-15T04:27:00Z,stake,63183|2025-12-15T04:27:00Z,shuffle,1709|2025-12-15T04:28:00Z,stake,62966|2025-12-15T04:28:00Z,shuffle,1722|2025-12-15T04:29:00Z,stake,62891|2025-12-15T04:29:00Z,shuffle,1728`;
+
+        let app;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            app = new App(rawData);
+            app.init();
+        });
+
+        // Global functions for onclick handlers
+        function showProModal() {
+            if (app) app.uiManager.showProModal();
+        }
+
+        function hideProModal() {
+            if (app) app.uiManager.hideProModal();
+        }
+
+        function downloadCSV() {
+            if (app) app.uiManager.downloadCSV();
+        }
+
+        function handleDateRangeChange(range, event) {
+            const target = event ? event.target : document.querySelector(`[data-range="${range}"]`);
+            if (app && target) {
+                app.uiManager.handleDateRangeChange(range, target);
+            }
+        }
+
+        function handleGraphTypeChange(type, event) {
+            const target = event ? event.target : document.querySelector(`[data-graph-type="${type}"]`);
+            if (app && target) {
+                app.uiManager.handleGraphTypeChange(type, target);
+            }
+        }
+
+        function handleSearch(event) {
+            const searchTerm = event.target.value.toLowerCase().trim();
+            
+            // Filter platforms based on search
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                if (!searchTerm) {
+                    // Show all rows if search is empty
+                    row.style.display = '';
+                    return;
+                }
+                
+                const platformCell = row.querySelector('td:nth-child(2)');
+                if (!platformCell) return;
+                
+                const platformName = platformCell.querySelector('.font-bold')?.textContent.toLowerCase() || '';
+                const platformType = platformCell.querySelector('div > div:last-child')?.textContent.toLowerCase() || '';
+                const allText = platformCell.textContent.toLowerCase();
+                
+                if (platformName.includes(searchTerm) || platformType.includes(searchTerm) || allText.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+    <!-- Top Navigation -->
+    <header class="bg-[#18181b] border-b border-[#26262c] h-16 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+            <div class="flex items-center gap-8">
+                <a href="index.html" class="flex items-center gap-2" aria-label="WagerCharts Home">
+                    <div class="bg-accent-cyan text-black p-1 rounded-sm">
+                        <iconify-icon icon="lucide:bar-chart-2" width="20"></iconify-icon>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight text-white glow-text">WagerCharts</span>
+                </a>
+            </div>
+            
+            <nav class="flex items-center gap-6">
+                <a href="#" class="text-xs font-semibold text-white hover:text-accent-cyan uppercase tracking-wide transition-colors">Charts</a>
+                <a href="#" class="text-xs font-semibold text-text-muted hover:text-white uppercase tracking-wide transition-colors">Ranking</a>
+                <a href="#" class="text-xs font-semibold text-text-muted hover:text-white uppercase tracking-wide transition-colors">Games</a>
+                <button onclick="showProModal()" class="badge-pro px-4 py-2 rounded text-xs font-bold uppercase hover:brightness-110 transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                    <iconify-icon icon="lucide:zap" width="12"></iconify-icon>
+                    Get Pro
+                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="text-xs font-semibold text-text-muted hover:text-white px-3 py-1.5 transition-colors">Sign In</button>
+                    <button onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="text-xs font-semibold bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded transition-colors">Register</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
+        
+        <!-- Breadcrumbs & Title -->
+        <div class="mb-8">
+            <div class="flex items-center gap-2 text-[10px] text-text-muted font-medium uppercase tracking-wider mb-2">
+                <span class="hover:text-white cursor-pointer">Home</span>
+                <iconify-icon icon="lucide:chevron-right" width="10"></iconify-icon>
+                <span class="hover:text-white cursor-pointer">Analytics</span>
+                <iconify-icon icon="lucide:chevron-right" width="10"></iconify-icon>
+                <span class="text-accent-cyan">Comparison</span>
+            </div>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <!-- SEO OPTIMIZED H1 -->
+                <div>
+                    <h1 class="text-3xl font-bold text-white tracking-tight">Live Crypto Casino Player Counts & Analytics</h1>
+                    <p class="text-xs text-text-muted mt-1 max-w-2xl">
+                        Real-time data tracking for Stake.com and Shuffle. Monitor active players, volume, and uptime in one dashboard.
+                    </p>
+                </div>
+                <div class="flex items-center gap-2 bg-[#18181b] p-1 rounded border border-[#26262c]">
+                    <button onclick="handleDateRangeChange('live', event)" data-range="live" class="px-3 py-1.5 text-[11px] font-bold text-black bg-white rounded shadow-sm flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                        Live
+                    </button>
+                    <button onclick="handleDateRangeChange('7d', event)" data-range="7d" class="px-3 py-1.5 text-[11px] font-bold text-text-muted hover:text-white transition-colors">7 Days</button>
+                    <button onclick="handleDateRangeChange('30d', event)" data-range="30d" class="px-3 py-1.5 text-[11px] font-bold text-text-muted hover:text-white transition-colors">30 Days</button>
+                    <div class="w-px h-4 bg-[#26262c] mx-1"></div>
+                    <button onclick="handleDateRangeChange('custom', event)" class="px-2 text-text-muted hover:text-white" aria-label="Custom Date Range">
+                        <iconify-icon icon="lucide:calendar" width="14"></iconify-icon>
+                    </button>
+                    <div class="w-px h-4 bg-[#26262c] mx-1"></div>
+                    <button onclick="downloadCSV()" class="px-2 text-text-muted hover:text-white" title="Download CSV" aria-label="Download CSV Data">
+                        <iconify-icon icon="lucide:download" width="14"></iconify-icon>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Statistics Row -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-bg-card rounded border border-[#26262c] p-4 flex items-center gap-4 hover:border-[#323239] transition-colors group">
+                <div class="w-10 h-10 rounded bg-[#26262c] flex items-center justify-center text-accent-cyan group-hover:text-white group-hover:bg-accent-cyan transition-all">
+                    <iconify-icon icon="lucide:users" width="20"></iconify-icon>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-0.5">Peak Players</div>
+                    <div class="text-xl font-bold text-white" id="stat-peak">73,365</div>
+                </div>
+            </div>
+            <div class="bg-bg-card rounded border border-[#26262c] p-4 flex items-center gap-4 hover:border-[#323239] transition-colors group">
+                <div class="w-10 h-10 rounded bg-[#26262c] flex items-center justify-center text-blue-500 group-hover:text-white group-hover:bg-blue-500 transition-all">
+                    <iconify-icon icon="lucide:activity" width="20"></iconify-icon>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-0.5">Avg Players</div>
+                    <div class="text-xl font-bold text-white" id="stat-avg">67,420</div>
+                </div>
+            </div>
+            <div class="bg-bg-card rounded border border-[#26262c] p-4 flex items-center gap-4 hover:border-[#323239] transition-colors group">
+                <div class="w-10 h-10 rounded bg-[#26262c] flex items-center justify-center text-emerald-500 group-hover:text-white group-hover:bg-emerald-500 transition-all">
+                    <iconify-icon icon="lucide:clock" width="20"></iconify-icon>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-0.5">Hours Played</div>
+                    <div class="text-xl font-bold text-white">164.5K</div>
+                </div>
+            </div>
+            <div class="bg-bg-card rounded border border-[#26262c] p-4 flex items-center gap-4 hover:border-[#323239] transition-colors group">
+                <div class="w-10 h-10 rounded bg-[#26262c] flex items-center justify-center text-purple-500 group-hover:text-white group-hover:bg-purple-500 transition-all">
+                    <iconify-icon icon="lucide:radio" width="20"></iconify-icon>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-0.5">Live Games</div>
+                    <div class="text-xl font-bold text-white">2,143</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chart Section -->
+        <div class="bg-bg-card border border-[#26262c] rounded-lg overflow-hidden mb-6">
+            <div class="p-4 border-b border-[#26262c] flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-3">
+                        <div class="logo-compact box-stake">
+                            <svg viewBox="0 0 130 200" class="logo-svg svg-stake" role="img" aria-label="Stake Logo">
+                                <path d="M31.47,58.5c-.1-25.81,16.42-40.13,46.75-40.23,21.82-.08,25.72,14.2,25.72,19.39,0,9.94-14.06,20.48-14.06,20.48,0,0,.78,6.19,12.85,6.14,12.07-.05,23.83-8.02,23.76-27.96-.06-22.91-24.06-33.38-47.78-33.29C58.87,3.09,6.24,5.88,6.42,58.13c.18,46.41,87.76,50.5,87.83,80.21.12,32.27-36.08,40.96-48.33,40.96s-17.23-8.67-17.25-13.43c-.09-26.13,25.92-33.41,25.92-33.41,0-1.95-1.52-10.64-11.59-10.6-25.95.05-36.28,22.36-36.21,44.14.07,18.53,13.16,30.09,32.94,30.01,37.82-.14,80.46-18.59,80.3-59.56-.14-38.32-88.46-48.33-88.57-77.96Z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold text-white font-mono" id="stake-val">0</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="logo-compact box-shuffle">
+                            <svg viewBox="0 0 26 28" class="logo-svg svg-shuffle" role="img" aria-label="Shuffle Logo">
+                                <path d="M18.96 0.1H6.7C5.13 0.1 3.66 0.71 2.55 1.83 1.44 2.94 0.83 4.42 0.83 6V7.81c0 2.4 1.5 4.51 4.03 5.64l1.01 0.41V7.89c0-0.03 0-0.06 0-0.09V6c0-0.31 0.16-0.51 0.25-0.6 0.09-0.09 0.29-0.25 0.59-0.25h12.26c0.3 0 0.5 0.16 0.59 0.25 0.09 0.09 0.25 0.29 0.25 0.6V9.96h4.98V6c0-1.58-0.61-3.06-1.72-4.17C22 0.71 20.53 0.1 18.96 0.1zM20.79 14.54l-0.99-0.41v6.01c0 0.02 0 0.04 0 0.05v1.8c0 0.31-0.15 0.51-0.25 0.61-0.09 0.09-0.29 0.25-0.59 0.25H6.7c-0.46 0-0.84-0.38-0.84-0.84v-3.97H0.83V22c0 3.25 2.64 5.9 5.87 5.9h12.26c1.57 0 3.05-0.61 4.16-1.73 1.11-1.11 1.72-2.6 1.72-4.17v-1.81c0-2.43-1.51-4.54-4.05-5.65zM10.67 16.17c1.76 1.77 2.16 4 2.16 4s0.27-1.44 1.28-2.92c0.25-0.37 0.54-0.74 0.89-1.08 1.76-1.77 3.99-2.17 3.99-2.17s-1.68-0.31-3.28-1.55c-0.24-0.19-0.48-0.39-0.71-0.63-1.76-1.76-2.17-4-2.17-4s-0.26 1.44-1.27 2.92c-0.25 0.37-0.54 0.74-0.89 1.08-1.76 1.77-3.99 2.17-3.99 2.17s1.68 0.31 3.28 1.55c0.24 0.19 0.48 0.39 0.71 0.63z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold text-white font-mono" id="shuffle-val">0</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="relative h-[400px] w-full bg-[#131316]" id="chart-container">
+                <svg id="chart-svg" viewBox="0 0 1200 400" preserveAspectRatio="none" class="w-full h-full block" aria-label="Graph showing player counts for Stake and Shuffle casinos over time">
+                    <line x1="0" y1="100" x2="1200" y2="100" class="chart-grid-line" stroke-dasharray="2 2"></line>
+                    <line x1="0" y1="200" x2="1200" y2="200" class="chart-grid-line" stroke-dasharray="2 2"></line>
+                    <line x1="0" y1="300" x2="1200" y2="300" class="chart-grid-line" stroke-dasharray="2 2"></line>
+
+                    <linearGradient id="gradStake" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#00e701" stop-opacity="0.2"></stop>
+                        <stop offset="100%" stop-color="#00e701" stop-opacity="0"></stop>
+                    </linearGradient>
+                    <path id="stake-area" fill="url(#gradStake)" class="chart-area"></path>
+                    <path id="stake-line" fill="none" stroke="#00e701" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+
+                    <linearGradient id="gradShuffle" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.2"></stop>
+                        <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"></stop>
+                    </linearGradient>
+                    <path id="shuffle-area" fill="url(#gradShuffle)" class="chart-area"></path>
+                    <path id="shuffle-line" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+
+                <div class="absolute bottom-0 left-0 right-0 h-8 border-t border-[#26262c] bg-[#18181b]/50 backdrop-blur-sm flex justify-between items-center px-6 text-[10px] font-mono text-text-muted">
+                    <span class="time-label">00:00</span>
+                    <span class="time-label">00:00</span>
+                    <span class="time-label">00:00</span>
+                    <span class="time-label">00:00</span>
+                    <span class="time-label">00:00</span>
+                    <span class="time-label">00:00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Ranking Table -->
+            <div class="lg:col-span-2 bg-bg-card border border-[#26262c] rounded-lg flex flex-col">
+                <div class="p-4 border-b border-[#26262c] flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wide">Casino Ranking</h3>
+                    <a href="#" class="text-[11px] font-bold text-accent-cyan hover:underline">View All</a>
+                </div>
+                <div class="flex-1 overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-[10px] uppercase font-bold text-text-muted bg-[#131316]">
+                                <th class="px-4 py-3 w-12 text-center">#</th>
+                                <th class="px-4 py-3">Platform</th>
+                                <th class="px-4 py-3 text-right">Players Peak</th>
+                                <th class="px-4 py-3 text-right">Hours Played</th>
+                                <th class="px-4 py-3 text-right">Uptime</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs font-medium">
+                            <tr class="border-b border-[#26262c] hover:bg-[#1f1f23]">
+                                <td class="px-4 py-4 text-center rank-cell">1</td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="logo-compact box-stake">
+                                            <svg viewBox="0 0 130 200" class="logo-svg svg-stake" role="img" aria-label="Stake Logo">
+                                                <path d="M31.47,58.5c-.1-25.81,16.42-40.13,46.75-40.23,21.82-.08,25.72,14.2,25.72,19.39,0,9.94-14.06,20.48-14.06,20.48,0,0,.78,6.19,12.85,6.14,12.07-.05,23.83-8.02,23.76-27.96-.06-22.91-24.06-33.38-47.78-33.29C58.87,3.09,6.24,5.88,6.42,58.13c.18,46.41,87.76,50.5,87.83,80.21.12,32.27-36.08,40.96-48.33,40.96s-17.23-8.67-17.25-13.43c-.09-26.13,25.92-33.41,25.92-33.41,0-1.95-1.52-10.64-11.59-10.6-25.95.05-36.28,22.36-36.21,44.14.07,18.53,13.16,30.09,32.94,30.01,37.82-.14,80.46-18.59,80.3-59.56-.14-38.32-88.46-48.33-88.57-77.96Z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-white">Stake.com</div>
+                                            <div class="text-[10px] text-text-muted">Gambling</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-right">
+                                    <span class="text-white font-mono font-semibold" data-original-value="71219">71,219</span>
+                                    <span class="text-[10px] text-rose-500 ml-1">(-1.2%)</span>
+                                </td>
+                                <td class="px-4 py-4 text-right text-text-muted font-mono" data-original-value="162402">162,402</td>
+                                <td class="px-4 py-4 text-right text-text-muted font-mono">24h</td>
+                            </tr>
+                            <tr class="border-b border-[#26262c] hover:bg-[#1f1f23]">
+                                <td class="px-4 py-4 text-center rank-cell">2</td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="logo-compact box-shuffle">
+                                            <svg viewBox="0 0 26 28" class="logo-svg svg-shuffle" role="img" aria-label="Shuffle Logo">
+                                                <path d="M18.96 0.1H6.7C5.13 0.1 3.66 0.71 2.55 1.83 1.44 2.94 0.83 4.42 0.83 6V7.81c0 2.4 1.5 4.51 4.03 5.64l1.01 0.41V7.89c0-0.03 0-0.06 0-0.09V6c0-0.31 0.16-0.51 0.25-0.6 0.09-0.09 0.29-0.25 0.59-0.25h12.26c0.3 0 0.5 0.16 0.59 0.25 0.09 0.09 0.25 0.29 0.25 0.6V9.96h4.98V6c0-1.58-0.61-3.06-1.72-4.17C22 0.71 20.53 0.1 18.96 0.1zM20.79 14.54l-0.99-0.41v6.01c0 0.02 0 0.04 0 0.05v1.8c0 0.31-0.15 0.51-0.25 0.61-0.09 0.09-0.29 0.25-0.59 0.25H6.7c-0.46 0-0.84-0.38-0.84-0.84v-3.97H0.83V22c0 3.25 2.64 5.9 5.87 5.9h12.26c1.57 0 3.05-0.61 4.16-1.73 1.11-1.11 1.72-2.6 1.72-4.17v-1.81c0-2.43-1.51-4.54-4.05-5.65zM10.67 16.17c1.76 1.77 2.16 4 2.16 4s0.27-1.44 1.28-2.92c0.25-0.37 0.54-0.74 0.89-1.08 1.76-1.77 3.99-2.17 3.99-2.17s-1.68-0.31-3.28-1.55c-0.24-0.19-0.48-0.39-0.71-0.63-1.76-1.76-2.17-4-2.17-4s-0.26 1.44-1.27 2.92c-0.25 0.37-0.54 0.74-0.89 1.08-1.76 1.77-3.99 2.17-3.99 2.17s1.68 0.31 3.28 1.55c0.24 0.19 0.48 0.39 0.71 0.63z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-white">Shuffle.com</div>
+                                            <div class="text-[10px] text-text-muted">Crypto Casino</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-right">
+                                    <span class="text-white font-mono font-semibold" data-original-value="2146">2,146</span>
+                                    <span class="text-[10px] text-emerald-500 ml-1">(+12.5%)</span>
+                                </td>
+                                <td class="px-4 py-4 text-right text-text-muted font-mono" data-original-value="5840">5,840</td>
+                                <td class="px-4 py-4 text-right text-text-muted font-mono">24h</td>
+                            </tr>
+                            <!-- Locked Platforms -->
+                            <tr class="border-b border-[#26262c] locked-platform">
+                                <td class="px-4 py-4 text-center rank-cell">3</td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded bg-[#26262c] flex items-center justify-center text-text-muted border border-[#26262c]">
+                                            <iconify-icon icon="lucide:lock" width="16"></iconify-icon>
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-text-muted">Rollbit</div>
+                                            <div class="text-[10px] text-text-muted">Pro Feature</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-right">
+                                    <span class="text-text-muted font-mono font-semibold">—</span>
+                                    <span class="text-[10px] text-text-muted ml-1">(Pro)</span>
+                                </td>
+                                <td class="px-4 py-4 text-right text-text-muted font-mono">—</td>
+                                <td class="px-4 py-4 text-right text-text-muted font-mono">—</td>
+                            </tr>
+                            <tr class="border-b border-[#26262c] locked-platform">
+                                <td class="px-4 py-4 text-center rank-cell">4</td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded bg-[#26262c] flex items-center justify-center text-text-muted border border-[#26262c]">
+                                            <iconify-icon icon="lucide:lock" width="16"></iconify-icon>
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-text-muted">Roobet</div>
+                                            <div class="text-[10px] text-text-muted">Pro Feature</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-right">
+                                    <span class="text-text-muted font-mono font-semibold">—</span>
+                                    <span class="text-[10px] text-text-muted ml-1">(Pro)</span>
+                                </td>
+                                <td class="px-4 py-4 text-right text-text-muted font-mono">—</td>
+                                <td class="px-4 py-4 text-right text-text-muted font-mono">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Side Panel -->
+            <div class="flex flex-col gap-6">
+                <!-- Filters -->
+                <div class="bg-bg-card border border-[#26262c] rounded-lg p-4">
+                    <h3 class="text-xs font-bold text-text-muted uppercase tracking-wide mb-4">Filtering</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-white mb-2">Currency</label>
+                            <select id="currency-filter" class="w-full bg-[#0e0e11] border border-[#26262c] rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-accent-cyan/50 transition-colors">
+                                <option value="USD">USD</option>
+                                <option value="BTC">BTC</option>
+                            </select>
+                        </div>
+                        <div class="w-full h-px bg-[#26262c]"></div>
+                        <div>
+                            <label class="block text-sm font-medium text-white mb-2">Date Range</label>
+                            <select id="date-range-filter" class="w-full bg-[#0e0e11] border border-[#26262c] rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-accent-cyan/50 transition-colors">
+                                <option value="live">Live</option>
+                                <option value="7d">7 Days</option>
+                                <option value="30d">30 Days</option>
+                            </select>
+                        </div>
+                        <div class="w-full h-px bg-[#26262c]"></div>
+                        <button id="apply-filters-btn" class="w-full py-2.5 mt-2 bg-[#26262c] hover:bg-[#323239] text-xs font-bold text-white uppercase rounded transition-colors">
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pro Badge -->
+                <div class="bg-gradient-to-br from-[#18181b] to-[#0e0e11] border border-[#26262c] rounded-lg p-6 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-accent-cyan/10 rounded-full blur-2xl group-hover:bg-accent-cyan/20 transition-colors"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="w-10 h-10 rounded bg-accent-cyan/20 flex items-center justify-center text-accent-cyan mb-3">
+                            <iconify-icon icon="lucide:crown" width="20"></iconify-icon>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1">Unlock Pro Stats</h3>
+                        <p class="text-xs text-text-muted leading-relaxed mb-4">
+                            Get access to historical data, advanced CSV exports, and audience overlap tools for the crypto gambling market.
+                        </p>
+                        <button onclick="showProModal()" class="w-full py-2.5 bg-accent-cyan hover:bg-accent-cyanBright text-black text-xs font-bold uppercase rounded shadow-[0_4px_15px_rgba(6,182,212,0.3)] transition-all">
+                            Upgrade Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Pro Feature Modal -->
+    <div id="pro-modal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+        <div class="modal-content bg-bg-card border border-[#26262c] rounded-lg max-w-md w-full p-6 relative">
+            <button onclick="hideProModal()" class="absolute top-4 right-4 text-text-muted hover:text-white transition-colors" aria-label="Close Modal">
+                <iconify-icon icon="lucide:x" width="20"></iconify-icon>
+            </button>
+            
+            <div class="mb-6">
+                <div class="w-12 h-12 rounded bg-accent-cyan/20 flex items-center justify-center text-accent-cyan mb-4">
+                    <iconify-icon icon="lucide:crown" width="24"></iconify-icon>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Upgrade to Pro</h2>
+                <p class="text-sm text-text-muted">Unlock advanced features and historical data access.</p>
+            </div>
+
+            <div class="space-y-3 mb-6">
+                <div class="flex items-start gap-3">
+                    <iconify-icon icon="lucide:check-circle" class="text-accent-cyan mt-0.5" width="20"></iconify-icon>
+                    <div>
+                        <div class="text-sm font-semibold text-white">Full Historical Archive</div>
+                        <div class="text-xs text-text-muted">Access unlimited historical data</div>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <iconify-icon icon="lucide:check-circle" class="text-accent-cyan mt-0.5" width="20"></iconify-icon>
+                    <div>
+                        <div class="text-sm font-semibold text-white">CSV Data Exports</div>
+                        <div class="text-xs text-text-muted">Download data for analysis</div>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <iconify-icon icon="lucide:check-circle" class="text-accent-cyan mt-0.5" width="20"></iconify-icon>
+                    <div>
+                        <div class="text-sm font-semibold text-white">Additional Platforms</div>
+                        <div class="text-xs text-text-muted">Rollbit, Roobet, BC.Game & more</div>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <iconify-icon icon="lucide:check-circle" class="text-accent-cyan mt-0.5" width="20"></iconify-icon>
+                    <div>
+                        <div class="text-sm font-semibold text-white">Advanced Analytics</div>
+                        <div class="text-xs text-text-muted">Audience overlap & sentiment analysis</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button class="w-full py-3 bg-accent-cyan hover:bg-accent-cyanBright text-black text-sm font-bold uppercase rounded transition-all">
+                    Start Pro Trial - $29/mo
+                </button>
+                <button onclick="hideProModal()" class="w-full py-2 text-text-muted hover:text-white text-sm transition-colors">
+                    Maybe Later
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+        <div class="modal-content bg-bg-card border border-[#26262c] rounded-lg max-w-md w-full p-6 relative">
+            <button onclick="document.getElementById('auth-modal').classList.add('hidden')" class="absolute top-4 right-4 text-text-muted hover:text-white transition-colors" aria-label="Close Modal">
+                <iconify-icon icon="lucide:x" width="20"></iconify-icon>
+            </button>
+            
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-white mb-2">Sign In to WagerCharts</h2>
+                <p class="text-sm text-text-muted">Access your analytics dashboard</p>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Email</label>
+                    <input type="email" class="w-full bg-[#0e0e11] border border-[#26262c] rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-accent-cyan/50 transition-colors" placeholder="you@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Password</label>
+                    <input type="password" class="w-full bg-[#0e0e11] border border-[#26262c] rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-accent-cyan/50 transition-colors" placeholder="••••••••">
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button class="w-full py-3 bg-accent-cyan hover:bg-accent-cyanBright text-black text-sm font-bold uppercase rounded transition-all">
+                    Sign In
+                </button>
+                <div class="text-center text-xs text-text-muted">
+                    Don't have an account? <button class="text-accent-cyan hover:underline">Register</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-[#26262c] bg-[#18181b] mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-text-muted">
+                <div class="flex items-center gap-6">
+                    <span>© 2025 WagerCharts. All rights reserved.</span>
+                    <span class="hidden md:inline">Independent Data</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <a href="privacy.html" class="hover:text-white transition-colors">Privacy</a>
+                    <a href="terms.html" class="hover:text-white transition-colors">Terms</a>
+                    <a href="api.html" class="hover:text-white transition-colors">API</a>
+                    <a href="contact.html" class="hover:text-white transition-colors">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

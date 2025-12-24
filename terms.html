@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PRIMARY SEO -->
+    <title>Terms of Service | WagerCharts</title>
+    <meta name="description" content="Terms of Service for WagerCharts - Read our terms and conditions.">
+    <meta name="robots" content="index, follow">
+    
+    <!-- PERFORMANCE / STYLING -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    colors: {
+                        bg: {
+                            main: '#0e0e11', 
+                            card: '#18181b', 
+                            hover: '#1f1f23',
+                        },
+                        accent: {
+                            cyan: '#06b6d4',
+                            cyanBright: '#00e7ff',
+                            stake: '#00e701',
+                            shuffle: '#8b5cf6',
+                        },
+                        text: {
+                            main: '#efeff1',
+                            muted: '#adadb8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0e0e11;
+            color: #efeff1;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0e0e11; }
+        ::-webkit-scrollbar-thumb { background: #26262c; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #323239; }
+        
+        .glow-text {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+    <!-- Top Navigation -->
+    <header class="bg-[#18181b] border-b border-[#26262c] h-16 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+            <div class="flex items-center gap-8">
+                <a href="index.html" class="flex items-center gap-2" aria-label="WagerCharts Home">
+                    <div class="bg-accent-cyan text-black p-1 rounded-sm">
+                        <iconify-icon icon="lucide:bar-chart-2" width="20"></iconify-icon>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight text-white glow-text">WagerCharts</span>
+                </a>
+            </div>
+            
+            <nav class="flex items-center gap-6">
+                <a href="index.html" class="text-xs font-semibold text-text-muted hover:text-white uppercase tracking-wide transition-colors">Charts</a>
+                <a href="#" class="text-xs font-semibold text-text-muted hover:text-white uppercase tracking-wide transition-colors">Ranking</a>
+                <a href="#" class="text-xs font-semibold text-text-muted hover:text-white uppercase tracking-wide transition-colors">Games</a>
+                <button onclick="document.getElementById('auth-modal')?.classList.remove('hidden')" class="badge-pro px-4 py-2 rounded text-xs font-bold uppercase hover:brightness-110 transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                    <iconify-icon icon="lucide:zap" width="12"></iconify-icon>
+                    Get Pro
+                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="document.getElementById('auth-modal')?.classList.remove('hidden')" class="text-xs font-semibold text-text-muted hover:text-white px-3 py-1.5 transition-colors">Sign In</button>
+                    <button onclick="document.getElementById('auth-modal')?.classList.remove('hidden')" class="text-xs font-semibold bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded transition-colors">Register</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-4xl mx-auto px-4 py-12">
+        <div class="bg-bg-card border border-[#26262c] rounded-lg p-8">
+            <h1 class="text-3xl font-bold text-white mb-2">Terms of Service</h1>
+            <p class="text-sm text-text-muted mb-8">Last updated: December 15, 2025</p>
+
+            <div class="prose prose-invert max-w-none space-y-6 text-sm text-text-main leading-relaxed">
+                <section>
+                    <h2 class="text-xl font-bold text-white mb-3">1. Agreement to Terms</h2>
+                    <p class="text-text-main mb-4">
+                        By accessing or using WagerCharts ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, then you may not access the Service.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-bold text-white mb-3">2. Use License</h2>
+                    <p class="text-text-main mb-4">
+                        Permission is granted to temporarily access the materials on WagerCharts' website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 text-text-main ml-4">
+                        <li>Modify or copy the materials</li>
+                        <li>Use the materials for any commercial purpose or for any public display (commercial or non-commercial)</li>
+                        <li>Attempt to reverse engineer any software contained on WagerCharts' website</li>
+                        <li>Remove any copyright or other proprietary notations from the materials</li>
+                        <li>Transfer the materials to another person or "mirror" the materials on any other server</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-bold text-white mb-3">3. User Accounts</h2>
+                    <p class="text-text-main mb-4">
+                        When you create an account with us, you must provide information that is accurate, complete, and current at all times. You are responsible for safeguarding the password and for all activities that occur under your account. You agree not to disclose your password to any third party and to take sole responsibility for any activities or actions under your account.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-bold text-white mb-3">4. Prohibited Uses</h2>
+                    <p class="text-text-main mb-4">
+                        You may use the Service only for lawful purposes and in accordance with these Terms. You agree not to use the Service:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 text-text-main ml-4">
+                        <li>In any way that violates any applicable national or international law or regulation</li>
+                        <li>To transmit, or procure the sending of, any advertising or promotional material, including any "junk mail," "chain letter," "spam," or any other similar solicitation</li>
+                        <li>To impersonate or attempt to impersonate the company, a company employee, another user, or any other person or entity</li>
+                        <li>In any way that infringes upon the rights of others, or in any way is illegal, threatening, fraudulent, or harmful</li>
+                        <li>To engage in any other conduct that restricts or inhibits anyone's use or enjoyment of the website, or which, as determined by us, may harm or offend the company or users of the website or expose them to liability</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-bold text-white mb-3">5. Subscription Services</h2>
+                    <p class="text-text-main mb-4">
+                        Some parts of the Service are billed on a subscription basis ("Subscription(s)"). You will be billed in advance on a recurring and periodic basis ("Billing Cycle"). Billing cycles are set on a monthly basis. At the end of each Billing Cycle, your Subscription will automatically renew under the exact same conditions unless you cancel it or WagerCharts cancels it.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-bold text-white mb-3">6. Disclaimer</h2>
+                    <p class="text-text-main mb-4">
+                        The materials on WagerCharts' website are provided on an 'as is' basis. WagerCharts makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-bold text-white mb-3">7. Limitations</h2>
+                    <p class="text-text-main mb-4">
+                        In no event shall WagerCharts or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on WagerCharts' website, even if WagerCharts or a WagerCharts authorized representative has been notified orally or in writing of the possibility of such damage.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-bold text-white mb-3">8. Accuracy of Materials</h2>
+                    <p class="text-text-main mb-4">
+                        The materials appearing on WagerCharts' website could include technical, typographical, or photographic errors. WagerCharts does not warrant that any of the materials on its website are accurate, complete, or current. WagerCharts may make changes to the materials contained on its website at any time without notice.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-bold text-white mb-3">9. Links</h2>
+                    <p class="text-text-main mb-4">
+                        WagerCharts has not reviewed all of the sites linked to its website and is not responsible for the contents of any such linked site. The inclusion of any link does not imply endorsement by WagerCharts of the site. Use of any such linked website is at the user's own risk.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-bold text-white mb-3">10. Modifications</h2>
+                    <p class="text-text-main mb-4">
+                        WagerCharts may revise these Terms of Service for its website at any time without notice. By using this website you are agreeing to be bound by the then current version of these Terms of Service.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-bold text-white mb-3">11. Contact Information</h2>
+                    <p class="text-text-main mb-4">
+                        If you have any questions about these Terms of Service, please contact us at:
+                    </p>
+                    <p class="text-text-main">
+                        <strong class="text-white">Email:</strong> legal@wagercharts.com<br>
+                        <strong class="text-white">Address:</strong> WagerCharts Legal Team
+                    </p>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-[#26262c] bg-[#18181b] mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-text-muted">
+                <div class="flex items-center gap-6">
+                    <span>© 2025 WagerCharts. All rights reserved.</span>
+                    <span class="hidden md:inline">Independent Data</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <a href="privacy.html" class="hover:text-white transition-colors">Privacy</a>
+                    <a href="terms.html" class="hover:text-white transition-colors">Terms</a>
+                    <a href="api.html" class="hover:text-white transition-colors">API</a>
+                    <a href="contact.html" class="hover:text-white transition-colors">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
+

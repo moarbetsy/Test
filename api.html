@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PRIMARY SEO -->
+    <title>API Documentation | WagerCharts</title>
+    <meta name="description" content="WagerCharts API Documentation - Access real-time crypto casino analytics data via REST API.">
+    <meta name="robots" content="index, follow">
+    
+    <!-- PERFORMANCE / STYLING -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    colors: {
+                        bg: {
+                            main: '#0e0e11', 
+                            card: '#18181b', 
+                            hover: '#1f1f23',
+                        },
+                        accent: {
+                            cyan: '#06b6d4',
+                            cyanBright: '#00e7ff',
+                            stake: '#00e701',
+                            shuffle: '#8b5cf6',
+                        },
+                        text: {
+                            main: '#efeff1',
+                            muted: '#adadb8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0e0e11;
+            color: #efeff1;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0e0e11; }
+        ::-webkit-scrollbar-thumb { background: #26262c; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #323239; }
+        
+        .glow-text {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+        }
+
+        .code-block {
+            background-color: #0e0e11;
+            border: 1px solid #26262c;
+            border-radius: 6px;
+            padding: 16px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+    <!-- Top Navigation -->
+    <header class="bg-[#18181b] border-b border-[#26262c] h-16 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+            <div class="flex items-center gap-8">
+                <a href="index.html" class="flex items-center gap-2" aria-label="WagerCharts Home">
+                    <div class="bg-accent-cyan text-black p-1 rounded-sm">
+                        <iconify-icon icon="lucide:bar-chart-2" width="20"></iconify-icon>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight text-white glow-text">WagerCharts</span>
+                </a>
+            </div>
+            
+            <nav class="flex items-center gap-6">
+                <a href="index.html" class="text-xs font-semibold text-text-muted hover:text-white uppercase tracking-wide transition-colors">Charts</a>
+                <a href="#" class="text-xs font-semibold text-text-muted hover:text-white uppercase tracking-wide transition-colors">Ranking</a>
+                <a href="#" class="text-xs font-semibold text-text-muted hover:text-white uppercase tracking-wide transition-colors">Games</a>
+                <button onclick="document.getElementById('auth-modal')?.classList.remove('hidden')" class="badge-pro px-4 py-2 rounded text-xs font-bold uppercase hover:brightness-110 transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                    <iconify-icon icon="lucide:zap" width="12"></iconify-icon>
+                    Get Pro
+                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="document.getElementById('auth-modal')?.classList.remove('hidden')" class="text-xs font-semibold text-text-muted hover:text-white px-3 py-1.5 transition-colors">Sign In</button>
+                    <button onclick="document.getElementById('auth-modal')?.classList.remove('hidden')" class="text-xs font-semibold bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded transition-colors">Register</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-4xl mx-auto px-4 py-12">
+        <div class="space-y-8">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">API Documentation</h1>
+                <p class="text-sm text-text-muted">Access real-time crypto casino analytics data via our REST API</p>
+            </div>
+
+            <!-- Authentication -->
+            <div class="bg-bg-card border border-[#26262c] rounded-lg p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Authentication</h2>
+                <p class="text-sm text-text-main mb-4">
+                    All API requests require authentication using an API key. Include your API key in the request header:
+                </p>
+                <div class="code-block">
+                    <span class="text-accent-cyan">Authorization:</span> <span class="text-white">Bearer YOUR_API_KEY</span>
+                </div>
+            </div>
+
+            <!-- Endpoint 1 -->
+            <div class="bg-bg-card border border-[#26262c] rounded-lg p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded">GET</span>
+                    <h2 class="text-xl font-bold text-white">/api/v1/stats</h2>
+                </div>
+                <p class="text-sm text-text-main mb-4">
+                    Retrieve real-time statistics for all tracked platforms including player counts, peak values, and averages.
+                </p>
+                
+                <h3 class="text-sm font-bold text-white mb-2 mt-4">Request</h3>
+                <div class="code-block mb-4">
+                    <span class="text-purple-400">GET</span> <span class="text-white">https://api.wagercharts.com/v1/stats</span><br>
+                    <span class="text-accent-cyan">Authorization:</span> <span class="text-white">Bearer YOUR_API_KEY</span>
+                </div>
+
+                <h3 class="text-sm font-bold text-white mb-2">Response</h3>
+                <div class="code-block">
+                    <span class="text-gray-400">{</span><br>
+                    <span class="text-gray-400">  </span><span class="text-purple-400">"status"</span><span class="text-gray-400">: </span><span class="text-emerald-400">"success"</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">  </span><span class="text-purple-400">"data"</span><span class="text-gray-400">: {</span><br>
+                    <span class="text-gray-400">    </span><span class="text-purple-400">"timestamp"</span><span class="text-gray-400">: </span><span class="text-emerald-400">"2025-12-15T04:30:00Z"</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">    </span><span class="text-purple-400">"platforms"</span><span class="text-gray-400">: [</span><br>
+                    <span class="text-gray-400">      {</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"name"</span><span class="text-gray-400">: </span><span class="text-emerald-400">"stake"</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"current_players"</span><span class="text-gray-400">: </span><span class="text-yellow-400">66231</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"peak_players"</span><span class="text-gray-400">: </span><span class="text-yellow-400">68831</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"avg_players"</span><span class="text-gray-400">: </span><span class="text-yellow-400">67420</span><br>
+                    <span class="text-gray-400">      },</span><br>
+                    <span class="text-gray-400">      {</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"name"</span><span class="text-gray-400">: </span><span class="text-emerald-400">"shuffle"</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"current_players"</span><span class="text-gray-400">: </span><span class="text-yellow-400">1767</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"peak_players"</span><span class="text-gray-400">: </span><span class="text-yellow-400">2146</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"avg_players"</span><span class="text-gray-400">: </span><span class="text-yellow-400">1850</span><br>
+                    <span class="text-gray-400">      }</span><br>
+                    <span class="text-gray-400">    ]</span><br>
+                    <span class="text-gray-400">  }</span><br>
+                    <span class="text-gray-400">}</span>
+                </div>
+            </div>
+
+            <!-- Endpoint 2 -->
+            <div class="bg-bg-card border border-[#26262c] rounded-lg p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded">GET</span>
+                    <h2 class="text-xl font-bold text-white">/api/v1/players</h2>
+                </div>
+                <p class="text-sm text-text-main mb-4">
+                    Get historical player count data for a specific platform within a date range. Supports filtering by platform and time period.
+                </p>
+                
+                <h3 class="text-sm font-bold text-white mb-2 mt-4">Request Parameters</h3>
+                <div class="mb-4 space-y-2 text-sm">
+                    <div class="flex gap-4">
+                        <span class="text-text-muted w-32">platform</span>
+                        <span class="text-text-main">string (required) - Platform name: "stake" or "shuffle"</span>
+                    </div>
+                    <div class="flex gap-4">
+                        <span class="text-text-muted w-32">start_date</span>
+                        <span class="text-text-main">string (optional) - ISO 8601 format (e.g., "2025-12-15T00:00:00Z")</span>
+                    </div>
+                    <div class="flex gap-4">
+                        <span class="text-text-muted w-32">end_date</span>
+                        <span class="text-text-main">string (optional) - ISO 8601 format (e.g., "2025-12-15T23:59:59Z")</span>
+                    </div>
+                </div>
+
+                <h3 class="text-sm font-bold text-white mb-2">Request Example</h3>
+                <div class="code-block mb-4">
+                    <span class="text-purple-400">GET</span> <span class="text-white">https://api.wagercharts.com/v1/players?platform=stake&start_date=2025-12-15T00:00:00Z&end_date=2025-12-15T23:59:59Z</span><br>
+                    <span class="text-accent-cyan">Authorization:</span> <span class="text-white">Bearer YOUR_API_KEY</span>
+                </div>
+
+                <h3 class="text-sm font-bold text-white mb-2">Response</h3>
+                <div class="code-block">
+                    <span class="text-gray-400">{</span><br>
+                    <span class="text-gray-400">  </span><span class="text-purple-400">"status"</span><span class="text-gray-400">: </span><span class="text-emerald-400">"success"</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">  </span><span class="text-purple-400">"data"</span><span class="text-gray-400">: {</span><br>
+                    <span class="text-gray-400">    </span><span class="text-purple-400">"platform"</span><span class="text-gray-400">: </span><span class="text-emerald-400">"stake"</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">    </span><span class="text-purple-400">"records"</span><span class="text-gray-400">: [</span><br>
+                    <span class="text-gray-400">      {</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"timestamp"</span><span class="text-gray-400">: </span><span class="text-emerald-400">"2025-12-15T03:00:00Z"</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"player_count"</span><span class="text-gray-400">: </span><span class="text-yellow-400">66900</span><br>
+                    <span class="text-gray-400">      },</span><br>
+                    <span class="text-gray-400">      {</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"timestamp"</span><span class="text-gray-400">: </span><span class="text-emerald-400">"2025-12-15T03:01:00Z"</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">        </span><span class="text-purple-400">"player_count"</span><span class="text-gray-400">: </span><span class="text-yellow-400">67197</span><br>
+                    <span class="text-gray-400">      }</span><br>
+                    <span class="text-gray-400">    ]</span><br>
+                    <span class="text-gray-400">  }</span><br>
+                    <span class="text-gray-400">}</span>
+                </div>
+            </div>
+
+            <!-- Endpoint 3 -->
+            <div class="bg-bg-card border border-[#26262c] rounded-lg p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded">GET</span>
+                    <h2 class="text-xl font-bold text-white">/api/v1/ranking</h2>
+                </div>
+                <p class="text-sm text-text-main mb-4">
+                    Retrieve the current ranking of all tracked platforms based on player counts, uptime, and other metrics.
+                </p>
+                
+                <h3 class="text-sm font-bold text-white mb-2 mt-4">Request</h3>
+                <div class="code-block mb-4">
+                    <span class="text-purple-400">GET</span> <span class="text-white">https://api.wagercharts.com/v1/ranking</span><br>
+                    <span class="text-accent-cyan">Authorization:</span> <span class="text-white">Bearer YOUR_API_KEY</span>
+                </div>
+
+                <h3 class="text-sm font-bold text-white mb-2">Response</h3>
+                <div class="code-block">
+                    <span class="text-gray-400">{</span><br>
+                    <span class="text-gray-400">  </span><span class="text-purple-400">"status"</span><span class="text-gray-400">: </span><span class="text-emerald-400">"success"</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">  </span><span class="text-purple-400">"data"</span><span class="text-gray-400">: [</span><br>
+                    <span class="text-gray-400">    {</span><br>
+                    <span class="text-gray-400">      </span><span class="text-purple-400">"rank"</span><span class="text-gray-400">: </span><span class="text-yellow-400">1</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">      </span><span class="text-purple-400">"platform"</span><span class="text-gray-400">: </span><span class="text-emerald-400">"stake"</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">      </span><span class="text-purple-400">"peak_players"</span><span class="text-gray-400">: </span><span class="text-yellow-400">71219</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">      </span><span class="text-purple-400">"hours_played"</span><span class="text-gray-400">: </span><span class="text-yellow-400">162402</span><span class="text-gray-400">,</span><br>
+                    <span class="text-gray-400">      </span><span class="text-purple-400">"uptime"</span><span class="text-gray-400">: </span><span class="text-emerald-400">"24h"</span><br>
+                    <span class="text-gray-400">    }</span><br>
+                    <span class="text-gray-400">  ]</span><br>
+                    <span class="text-gray-400">}</span>
+                </div>
+            </div>
+
+            <!-- Rate Limits -->
+            <div class="bg-bg-card border border-[#26262c] rounded-lg p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Rate Limits</h2>
+                <p class="text-sm text-text-main mb-4">
+                    API requests are limited to prevent abuse and ensure fair usage:
+                </p>
+                <ul class="list-disc list-inside space-y-2 text-sm text-text-main ml-4">
+                    <li><strong class="text-white">Free Tier:</strong> 100 requests per hour</li>
+                    <li><strong class="text-white">Pro Tier:</strong> 1,000 requests per hour</li>
+                    <li><strong class="text-white">Enterprise:</strong> Custom limits available</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-[#26262c] bg-[#18181b] mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-text-muted">
+                <div class="flex items-center gap-6">
+                    <span>© 2025 WagerCharts. All rights reserved.</span>
+                    <span class="hidden md:inline">Independent Data</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <a href="privacy.html" class="hover:text-white transition-colors">Privacy</a>
+                    <a href="terms.html" class="hover:text-white transition-colors">Terms</a>
+                    <a href="api.html" class="hover:text-white transition-colors">API</a>
+                    <a href="contact.html" class="hover:text-white transition-colors">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
+

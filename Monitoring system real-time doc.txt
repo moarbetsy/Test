@@ -1,0 +1,803 @@
+# Casino Player Count Monitor
+## Documentation Index & Architecture Overview
+
+---
+
+## Table of Contents
+
+1. [Project Overview](#project-overview)
+2. [Documentation Index](#documentation-index)
+3. [Architecture Overview](#architecture-overview)
+4. [System Components](#system-components)
+5. [Data Flow](#data-flow)
+6. [Quick Navigation](#quick-navigation)
+
+---
+
+## Project Overview
+
+A Rust-based monitoring system that tracks real-time player counts from online casinos. 
+
+**Current Implementation (v0.1.0):**
+- **Shuffle.com** monitoring via direct GraphQL API
+- **Stake.com** monitoring via Cursor MCP browser extraction
+- MPSC channel-based architecture with parallel monitoring tasks
+- 60-second polling interval for both casinos
+- Console logging with timestamps
+- Graceful shutdown handling
+- Node.js bridge for Cursor browser extraction
+
+**Planned Features (Future):**
+- Additional casinos (Roobet, Rollbit, etc.)
+- Database storage (SQLite/PostgreSQL)
+- REST API and file output
+- Web dashboard
+- Historical data tracking
+- Pure Rust implementation (remove Node.js dependency)
+
+---
+
+## Documentation Index
+
+### Core Documentation
+
+#### **README.md** - Getting Started & Historical Context
+**Purpose:** Original project documentation and setup guide  
+**Contains:**
+- Installation instructions (Rust + Node.js)
+- File structure overview
+- Multiple extraction method examples (GraphQL, HTML, Browser)
+- Cloudflare handling strategies
+- Historical approaches and legacy scripts
+
+**When to use:** Understanding project evolution, legacy extraction methods
+
+---
+
+#### **CASINO-MONITOR-DOCUMENTATION.md** - Current Implementation Guide [PRIMARY]
+**Purpose:** Complete documentation for the current production implementation  
+**Contains:**
+- Current architecture (MPSC channel with Shuffle.com + Stake.com)
+- Shuffle.com GraphQL API extraction details
+- Stake.com Cursor MCP browser extraction via Node.js bridge
+- Complete code structure and data flow
+- Running instructions and troubleshooting
+- How to add new casinos to current system
+- Performance and security notes
+
+**When to use:** Understanding current production code, debugging, extending the system
+
+**Note:** This reflects the ACTUAL implementation with both casinos working
+
+---
+
+#### **RECREATE-PROJECT-PROMPT.md** - Exact Recreation Guide
+**Purpose:** Step-by-step prompt to recreate the current implementation from scratch  
+**Contains:**
+- Complete Rust project structure
+- All dependencies with exact versions
+- Detailed implementation requirements
+- Code style guidelines
+- Expected behavior and testing steps
+
+**When to use:** Rebuilding the project, onboarding new developers, creating similar projects
+
+---
+
+#### **TECH-STACK-RECOMMENDATION.md** - Future Architecture Design
+**Purpose:** Complete technical architecture and implementation roadmap  
+**Contains:**
+- Tech stack justification (Rust + Tokio + SQLite/PostgreSQL)
+- Database schema design
+- Project structure and file organization
+- Implementation phases (4-week plan)
+- Configuration management
+- Alternative tech stacks (Python, Node.js, Go)
+- Deployment options (Docker, systemd)
+
+**When to use:** Planning implementation, choosing tech stack, architecting the system
+
+---
+
+### Casino-Specific Guides
+
+#### **STAKE-CURSOR-BROWSER-GUIDE.md** - Stake.com MCP Browser Method
+**Purpose:** Guide for extracting Stake.com data using Cursor's browser MCP tools  
+**Contains:**
+- How Cursor MCP browser extraction works
+- Extraction patterns (accessible names in DOM)
+- Step-by-step usage instructions
+- Integration with Rust monitor
+- Troubleshooting tips
+
+**When to use:** Setting up Stake.com extraction, understanding MCP browser approach
+
+---
+
+#### **STAKE-RECREATION-PROMPT.md** - Stake.com Implementation Guide
+**Purpose:** Detailed prompt for recreating Stake.com monitoring from scratch  
+**Contains:**
+- Three extraction methods (HTML, GraphQL, Browser Snapshot)
+- Cloudflare handling strategies
+- Complete code structure and examples
+- Output format specifications
+- Technical implementation details
+
+**When to use:** Implementing Stake.com extractor, understanding multiple extraction approaches
+
+---
+
+### Technical Deep Dives
+
+#### **WHY-MCP-BYPASSES-CLOUDFLARE.md** - Cloudflare Technical Explanation
+**Purpose:** Technical explanation of why Cursor's MCP browser bypasses Cloudflare  
+**Contains:**
+- Real browser vs automation comparison
+- JavaScript execution and challenge handling
+- TLS and HTTP/2 fingerprinting
+- Cookie and session management
+- Browser fingerprinting resistance
+- Technical comparison table
+
+**When to use:** Understanding Cloudflare protection, debugging extraction issues, choosing extraction method
+
+---
+
+## Architecture Overview
+
+### Current Implementation (v0.1.0)
+
+**Dual-Casino MPSC Channel Architecture:**
+
+```
+Casino Monitor (Current - Dual Casino)
+
+Data Sources:
+  - Shuffle.com (GraphQL API)
+  - Stake.com (via Cursor MCP)
+
+Extraction Layer:
+  - monitor_shuffle() Task
+    * GraphQL POST
+    * Poll every 60s
+  
+  - monitor_stake() Task
+    * Calls Node.js script
+    * extract-from-browser.js
+    * Poll every 60s
+
+Communication:
+  - Both tasks send PlayerCountUpdate messages
+  - MPSC Channel (capacity: 32)
+
+Processing:
+  - Main Loop receives updates
+  - Logs to console with timestamps
+
+Output:
+  [HH:MM:SS] Shuffle | Players: 12345
+  [HH:MM:SS] Stake | Players: 65432
+```
+
+**Key Characteristics:**
+- Two casinos running in parallel (Shuffle.com + Stake.com)
+- Shuffle: Direct GraphQL API (no Cloudflare issues)
+- Stake: Cursor MCP browser via Node.js bridge
+- Lightweight: ~2 operations per minute total
+- Both refresh every 60 seconds
+- No database, no API, no file output
+- Graceful shutdown with Ctrl+C
+- Hybrid architecture: Rust main + Node.js for browser extraction
+
+---
+
+### Planned Future Architecture
+
+**Multi-Casino System with Storage & API:**
+
+```
+                    Casino Monitor System (Future)
+
+Data Sources Layer:
+  - Shuffle.com (GraphQL)
+  - Stake.com (HTML)
+  - Other Casinos (TBD)
+
+Extraction Layer:
+  Casino Extractor Trait (Rust)
+    - GraphQL Extractor
+    - HTML Extractor
+    - Browser Extractor
+  
+  Features:
+    * Concurrent data collection (Tokio async)
+    * Error handling & retries
+    * Cloudflare bypass strategies
+    * Rate limiting per casino
+
+Core Engine:
+  Casino Registry & Orchestrator
+    * Manages casino configurations
+    * Schedules data collection
+    * Coordinates multiple extractors
+  
+  Data Processor
+    * Validates player counts
+    * Aggregates multi-casino data
+    * Calculates totals
+
+Storage Layer:
+  SQLite / PostgreSQL Database
+    Tables:
+      * casinos (config, metadata)
+      * player_counts (time-series data)
+    
+    Features:
+      * Time-series optimized indexes
+      * Historical data retention
+      * Aggregate queries
+
+Output Layer:
+  - REST API (axum)
+  - Files (JSON/CSV)
+  - WebSocket (optional)
+
+Consumers:
+  - Web Dashboard (React/Vue)
+  - CLI tools
+  - External integrations
+  - Monitoring systems
+```
+
+---
+
+## System Components
+
+### Current Implementation Components
+
+#### **1. Main Application (`src/main.rs`)**
+```rust
+// Entry point: sets up logging, channel, and spawns tasks
+#[tokio::main]
+async fn main()
+```
+
+**Responsibilities:**
+- Initialize `tracing_subscriber` for logging
+- Create MPSC channel (capacity: 32)
+- Spawn `monitor_shuffle()` task
+- Spawn `monitor_stake()` task
+- Main event loop with `tokio::select!`
+- Handle Ctrl+C gracefully
+
+#### **2. Data Structures**
+```rust
+enum Casino { 
+    Shuffle,
+    Stake,  // NEW: Stake.com support added
+}
+
+struct PlayerCountUpdate {
+    casino: Casino,
+    count: u32,
+    timestamp: String,  // "HH:MM:SS" format
+}
+
+struct ShuffleResponse {
+    data: ShuffleData,
+}
+
+struct ShuffleData {
+    online_session: u32,
+}
+```
+
+#### **3. Shuffle Monitor Task**
+```rust
+async fn monitor_shuffle(tx: mpsc::Sender<PlayerCountUpdate>)
+```
+
+**Process:**
+1. Build HTTP client with headers (User-Agent, Cookie, etc.)
+2. Loop forever:
+   - POST GraphQL query to `shuffle.com/main-api/graphql/api/graphql`
+   - Parse JSON response → extract `onlineSession`
+   - Send `PlayerCountUpdate` via channel
+   - Sleep 60 seconds
+3. Log errors but continue running
+
+**GraphQL Query:**
+```graphql
+query GetOnlineUsers {
+  onlineSession
+}
+```
+
+#### **4. Stake Monitor Task** [NEW]
+```rust
+async fn monitor_stake(tx: mpsc::Sender<PlayerCountUpdate>)
+async fn fetch_stake_count(tx: &mpsc::Sender<PlayerCountUpdate>, script: &PathBuf)
+```
+
+**Process:**
+1. Fetch immediately on startup (like Shuffle)
+2. Loop forever:
+   - Execute Node.js script: `node extract-from-browser.js`
+   - Script uses Cursor's browser MCP tools to navigate to stake.com
+   - Parse JSON output from script
+   - Extract `casinoPlayerCount` + `sportsbookPlayerCount`
+   - Send total count via channel
+   - Sleep 60 seconds
+3. Handle script execution errors gracefully
+
+**Script Output Format:**
+```json
+{
+  "success": true,
+  "casinoPlayerCount": 39439,
+  "sportsbookPlayerCount": 23280,
+  "totalPlayerCount": 62719
+}
+```
+
+**Why Node.js Bridge?**
+- Cursor's MCP browser tools are JavaScript-based
+- Node.js script handles browser automation
+- Rust calls the script and parses output
+- Allows using MCP without reimplementing in Rust
+
+---
+
+### Future System Components (Planned)
+
+#### **Shuffle.com Extractor**
+- **Method:** Direct GraphQL API
+- **Endpoint:** `https://shuffle.com/main-api/graphql/api/graphql`
+- **Interval:** 60 seconds
+- **Status:** Production-ready, no Cloudflare issues
+
+#### **Stake.com Extractor**
+- **Method:** HTML extraction with DOM parsing (primary)
+- **Fallback:** Direct GraphQL (often blocked)
+- **Alternative:** Cursor MCP browser (most reliable)
+- **Interval:** 15 seconds
+- **Challenge:** Cloudflare protection
+
+**Extraction Priority:**
+```
+1. Cursor MCP Browser (most reliable for Stake)
+2. HTML extraction with HTTP (fast, usually works)
+3. Direct GraphQL API (often blocked)
+4. Browser automation (last resort, slow)
+```
+
+---
+
+### 2. **Core Processing Engine**
+
+#### **Casino Registry**
+- Manages casino configurations
+- Stores extraction methods per casino
+- Controls update intervals
+- Enable/disable casinos dynamically
+
+#### **Extractor Trait System**
+```rust
+trait CasinoExtractor {
+    async fn fetch_counts(&self) -> Result<PlayerCounts>;
+    fn name(&self) -> &str;
+    fn update_interval(&self) -> Duration;
+}
+```
+
+Benefits:
+- Modular design for adding new casinos
+- Testable (mock extractors)
+- Flexible (different methods per casino)
+
+---
+
+### 3. **Storage Layer**
+
+#### **Database Schema**
+
+**casinos table:**
+```sql
+CREATE TABLE casinos (
+    id INTEGER PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    url TEXT NOT NULL,
+    extraction_method TEXT NOT NULL,
+    update_interval_seconds INTEGER DEFAULT 60,
+    enabled BOOLEAN DEFAULT TRUE
+);
+```
+
+**player_counts table:**
+```sql
+CREATE TABLE player_counts (
+    id INTEGER PRIMARY KEY,
+    casino_id INTEGER NOT NULL,
+    casino_player_count INTEGER,
+    sportsbook_player_count INTEGER,
+    total_player_count INTEGER,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (casino_id) REFERENCES casinos(id)
+);
+```
+
+---
+
+### 4. **Output Layer**
+
+#### **REST API (axum)**
+```
+GET  /api/casinos                     # List all casinos
+GET  /api/casinos/{id}/current        # Latest count
+GET  /api/casinos/{id}/history        # Historical data
+GET  /api/aggregate/current           # All casinos total
+GET  /api/aggregate/history           # Historical aggregate
+GET  /health                          # Health check
+```
+
+#### **File Output**
+- **JSON:** `output/current.json` (real-time)
+- **CSV:** `output/history.csv` (optional)
+- **Format:** Configurable per use case
+
+#### **WebSocket (optional)**
+- Real-time updates for dashboards
+- Push-based instead of polling
+- Lower latency for live displays
+
+---
+
+## Data Flow
+
+### Current System Flow
+
+```
+1. Application starts
+   ↓
+2. Initialize logging
+   ↓
+3. Create MPSC channel
+   ↓
+4. Spawn TWO parallel tasks:
+   │
+   ├─► monitor_shuffle() task:
+   │   ├─ POST to shuffle.com GraphQL
+   │   ├─ Parse JSON response
+   │   ├─ Extract onlineSession count
+   │   ├─ Send PlayerCountUpdate → channel
+   │   └─ Sleep 60 seconds, repeat
+   │
+   └─► monitor_stake() task:
+       ├─ Execute: node extract-from-browser.js
+       ├─ Script uses Cursor MCP browser
+       ├─ Parse script JSON output
+       ├─ Sum casino + sportsbook counts
+       ├─ Send PlayerCountUpdate → channel
+       └─ Sleep 60 seconds, repeat
+   ↓
+5. Main loop (tokio::select!):
+   ├─ Receive from channel → log to console
+   └─ Listen for Ctrl+C → shutdown
+```
+
+**Output:**
+```
+[14:30:15] Shuffle | Players Online: 12345
+[14:30:16] Stake | Players Online: 62719
+[14:31:15] Shuffle | Players Online: 12350
+[14:31:16] Stake | Players Online: 62850
+```
+
+**Note:** Both casinos refresh every 60 seconds, but may not be perfectly synchronized.
+
+---
+
+### Future System Flow (Planned)
+
+```
+1. Timer triggers (every 15-60 seconds)
+   ↓
+2. Orchestrator selects enabled casinos
+   ↓
+3. For each casino:
+   a. Get appropriate extractor
+   b. Make HTTP/browser request
+   c. Parse response (HTML/JSON/DOM)
+   d. Extract player counts
+   ↓
+4. Validate data
+   ↓
+5. Write to database
+   ↓
+6. Update output files (if enabled)
+   ↓
+7. Notify WebSocket clients (if enabled)
+   ↓
+8. Log metrics & errors
+```
+
+---
+
+### Extraction Methods by Casino
+
+**Current Implementation:**
+
+| Casino | Method | Endpoint/Script | Interval | Status | Cloudflare | Notes |
+|--------|--------|----------------|----------|--------|------------|-------|
+| Shuffle | GraphQL API | `/main-api/graphql/api/graphql` | 60s | LIVE | No | Direct HTTP POST |
+| Stake | Cursor MCP Browser | `extract-from-browser.js` | 60s | LIVE | Yes | Node.js bridge to MCP |
+
+**Future/Planned:**
+
+| Casino | Primary Method | Fallback | Interval | Cloudflare |
+|--------|---------------|----------|----------|------------|
+| Roobet | TBD | TBD | 60s | TBD |
+| Rollbit | TBD | TBD | 60s | TBD |
+| Other | TBD | TBD | 60s | TBD |
+
+---
+
+## Quick Navigation
+
+### 🚀 Getting Started with Current Implementation
+1. Read **CASINO-MONITOR-DOCUMENTATION.md** for current system ⭐
+2. Use **RECREATE-PROJECT-PROMPT.md** to rebuild from scratch
+3. Install dependencies:
+   - Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+   - Node.js: Required for Stake.com extraction
+4. Run: `cargo build && cargo run`
+5. Watch both Shuffle.com and Stake.com update every 60 seconds
+
+### 🔮 Planning Future Multi-Casino System
+1. Review **TECH-STACK-RECOMMENDATION.md** for full architecture
+2. Read **README.md** for extraction method options
+3. Follow implementation phases in tech stack doc
+4. Consider migrating from Node.js bridge to pure Rust
+
+### 🎰 Understanding Stake.com Implementation
+1. Read **WHY-MCP-BYPASSES-CLOUDFLARE.md** to understand why MCP works
+2. Review **STAKE-CURSOR-BROWSER-GUIDE.md** for MCP browser usage
+3. Check **STAKE-RECREATION-PROMPT.md** for alternative approaches
+4. Examine `extract-from-browser.js` for current Node.js bridge
+
+### 🔧 Understanding Cloudflare (For Future Sites)
+1. Start with **WHY-MCP-BYPASSES-CLOUDFLARE.md**
+2. Review extraction methods in **STAKE-RECREATION-PROMPT.md**
+3. Implement strategies from **README.md** Cloudflare section
+
+### 📊 Extending the Current System
+1. Study current architecture in **CASINO-MONITOR-DOCUMENTATION.md**
+2. Follow "Adding New Casinos" guide in same document
+3. Add new enum variant and monitor function in `main.rs`
+4. Consider extraction method: direct API vs MCP browser vs other
+
+---
+
+## Key Design Principles
+
+### 1. **Extraction Method Priority**
+```
+Direct API (Shuffle) > MCP Browser (Stake) > HTTP/HTML > Browser Automation
+```
+
+**Rationale:**
+- API calls are fastest and most reliable (used for Shuffle)
+- MCP browser bypasses Cloudflare reliably (used for Stake via Node.js)
+- HTTP extraction mimics real page loads (future fallback)
+- Browser automation is last resort (slow, detectable)
+
+### 2. **Cloudflare Handling**
+```
+MCP Browser > HTTP with realistic headers > Browser automation
+```
+
+**Rationale:**
+- MCP browser is indistinguishable from real users (current Stake approach)
+- HTTP with proper headers works for most cases
+- Browser automation only when absolutely needed
+
+### 3. **Hybrid Architecture (Current)**
+- **Rust**: Main application, orchestration, Shuffle extraction
+- **Node.js Bridge**: Stake.com extraction via Cursor MCP browser
+- **MPSC Channel**: Communication between tasks
+- **Future**: Migrate to pure Rust if MCP Rust bindings become available
+
+### 4. **Modularity**
+- Each casino has its own monitor function
+- Casino enum for identification
+- Channel-based communication
+- Easy to add new casinos (just add enum + function + spawn)
+
+### 5. **Reliability**
+- Error handling at every layer
+- Errors logged but don't stop monitoring
+- Graceful degradation (one casino failure doesn't affect others)
+- Comprehensive logging with `tracing`
+
+---
+
+## Technology Decisions
+
+### Why Rust for Main Application?
+- **Performance:** Handle multiple casinos concurrently with low overhead
+- **Reliability:** Type safety prevents runtime errors
+- **Concurrency:** Excellent async/await with Tokio
+- **Deployment:** Single binary for main application
+
+### Why Node.js Bridge for Stake.com?
+- **MCP Access:** Cursor's MCP browser tools are JavaScript-based
+- **Pragmatic:** Faster to implement than waiting for Rust MCP bindings
+- **Isolated:** Stake extraction failures don't crash main application
+- **Simple IPC:** JSON output parsed by Rust
+- **Future:** Can migrate to pure Rust when MCP Rust bindings available
+
+**Bridge Architecture:**
+```
+Rust (main.rs)
+  |
+  | spawn process
+  v
+Node.js (extract-from-browser.js)
+  |
+  | uses
+  v
+Cursor MCP Browser Tools
+  |
+  | navigates to
+  v
+Stake.com
+  |
+  | extracts
+  v
+Player Counts
+  |
+  | returns JSON to
+  v
+Rust (parses and logs)
+```
+
+### Why MPSC Channel?
+- **Simple:** Standard Rust pattern for task communication
+- **Type-safe:** Compile-time guarantees on message types
+- **Efficient:** Low overhead for passing player count updates
+- **Scalable:** Can handle many concurrent casino tasks
+
+### Why SQLite (Future Development)?
+- **Zero setup:** Works immediately
+- **Fast:** Perfect for time-series reads
+- **Portable:** Single file, easy backup
+- **Upgrade path:** Migrate to PostgreSQL for production
+
+### Why Multiple Extraction Methods?
+- **Flexibility:** Different sites need different approaches
+- **Resilience:** Direct API (Shuffle) vs MCP Browser (Stake)
+- **Maintainability:** Isolate casino-specific logic in separate functions
+
+---
+
+## File Organization
+
+```
+casino-monitor/
+├── README.md                               # [Historical context & legacy methods]
+├── CASINO-MONITOR-DOCUMENTATION.md         # [Current implementation - START HERE] ⭐
+├── RECREATE-PROJECT-PROMPT.md              # [Rebuild guide]
+├── TECH-STACK-RECOMMENDATION.md            # [Future architecture]
+├── STAKE-CURSOR-BROWSER-GUIDE.md           # [Stake.com MCP method]
+├── STAKE-RECREATION-PROMPT.md              # [Stake.com implementation]
+├── WHY-MCP-BYPASSES-CLOUDFLARE.md          # [Technical deep dive]
+│
+├── Cargo.toml                              # Rust dependencies
+├── src/
+│   └── main.rs                             # Current implementation (Shuffle + Stake)
+│
+├── extract-from-browser.js                 # Node.js bridge for Cursor MCP browser ⭐
+├── scraper-http.js                         # Legacy HTTP scraper
+├── stake-cursor-extract.js                 # Legacy MCP extraction script
+└── output/                                 # File output directory (future)
+```
+
+**Key Files:**
+- **`main.rs`** - Rust application that orchestrates both casinos
+- **`extract-from-browser.js`** - Node.js script that uses Cursor's MCP browser to extract Stake.com data
+- **`Cargo.toml`** - Rust dependencies (tokio, reqwest, etc.)
+```
+
+---
+
+## Next Steps
+
+### For New Users (Current System)
+1. ✅ Read **CASINO-MONITOR-DOCUMENTATION.md** (current implementation)
+2. ✅ Install Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+3. ✅ Install Node.js: Required for Stake.com MCP browser extraction
+4. ✅ Build: `cargo build`
+5. ✅ Run: `cargo run`
+6. ✅ Watch Shuffle.com and Stake.com player counts update every 60 seconds
+
+### For Adding More Casinos (Current System)
+1. ✅ Follow "Adding New Casinos" in **CASINO-MONITOR-DOCUMENTATION.md**
+2. ✅ Add new `Casino` enum variant (e.g., `Casino::Roobet`)
+3. ✅ Create new `monitor_*()` function
+4. ✅ Decide extraction method:
+   - Direct API (like Shuffle) - fastest
+   - MCP browser (like Stake) - for Cloudflare sites
+   - HTTP with HTML parsing - middle ground
+5. ✅ Spawn task in `main()`
+
+### For Building Future Multi-Casino System
+1. ✅ Study **TECH-STACK-RECOMMENDATION.md** for architecture
+2. ✅ Implement Phase 1: Core engine and database
+3. ✅ Implement Phase 2: Output layer (API/files)
+4. ✅ Implement Phase 3: Trait-based extractor system
+5. ✅ Implement Phase 4: Dashboard and WebSocket
+6. ✅ Consider: Migrate from Node.js bridge to pure Rust (if MCP Rust bindings available)
+
+### For Debugging Current System
+1. ✅ Check **CASINO-MONITOR-DOCUMENTATION.md** troubleshooting section
+2. ✅ **Shuffle**: Verify cookie hasn't expired (in `main.rs` line 104)
+3. ✅ **Stake**: Verify `extract-from-browser.js` script exists and works
+4. ✅ Check Node.js is installed: `node --version`
+5. ✅ Check network connectivity
+6. ✅ Review logs for specific error messages
+
+---
+
+## Summary
+
+### Current System (v0.1.0)
+
+A **dual-casino monitoring tool** with hybrid Rust + Node.js architecture:
+
+- **Production-ready** for both Shuffle.com and Stake.com
+- **Shuffle**: Direct GraphQL API (fast, no Cloudflare)
+- **Stake**: Cursor MCP browser via Node.js bridge (bypasses Cloudflare)
+- **Parallel monitoring**: Both casinos refresh independently every 60 seconds
+- **Lightweight**: MPSC channel-based, console output only
+- **Easy to extend**: Clear patterns for adding new casinos
+
+**Architecture Highlights:**
+- Rust for main application and Shuffle.com extraction
+- Node.js bridge for Stake.com MCP browser extraction
+- MPSC channel for communication between tasks
+- Tokio async runtime for concurrent operations
+
+**Use Cases:** 
+- Real-time monitoring of Shuffle.com and Stake.com
+- Foundation for multi-casino monitoring system
+- Example of hybrid Rust + Node.js for browser automation
+
+---
+
+### Planned Future System
+
+A **comprehensive multi-casino monitoring platform** with:
+
+- **More casinos** (Roobet, Rollbit, etc.)
+- **Pure Rust** implementation (remove Node.js dependency if possible)
+- **Data persistence** with SQLite/PostgreSQL
+- **Multiple outputs** (REST API, files, WebSocket)
+- **Historical tracking** and trend analysis
+- **Web dashboard** for visualization
+- **Trait-based extractors** for modularity
+
+**Key Innovation:** Using Cursor's MCP browser for Cloudflare-protected sites (indistinguishable from real user browsers)
+
+---
+
+### Documentation Strategy
+
+- **Current Implementation**: See **CASINO-MONITOR-DOCUMENTATION.md** [PRIMARY] and **RECREATE-PROJECT-PROMPT.md**
+- **Stake.com (Current)**: Implemented via Node.js bridge in `extract-from-browser.js`
+- **Future Architecture**: See **TECH-STACK-RECOMMENDATION.md**
+- **Cloudflare Sites**: See **WHY-MCP-BYPASSES-CLOUDFLARE.md**, **STAKE-RECREATION-PROMPT.md**, **STAKE-CURSOR-BROWSER-GUIDE.md**
+- **Historical Context**: See **README.md**
+
+---
+
+**Questions?** Check the relevant guide in the [Documentation Index](#documentation-index) above.
